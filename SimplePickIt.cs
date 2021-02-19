@@ -49,6 +49,7 @@ namespace SimplePickIt
                     ?.Where(label => label.Address != 0
                         && label.ItemOnGround?.Type != null
                         && label.ItemOnGround.Type == EntityType.WorldItem
+                        && label.ItemOnGround.IsTargetable
                         && label.IsVisible
                         && (label.Label.GetClientRect().Center).PointInRectangle(windowSize)
                         )
@@ -76,6 +77,10 @@ namespace SimplePickIt
             // Use ServerRequestCounter as a way to know if the item was picked.
             var playerInventory = GameController.Game.IngameState.ServerData.PlayerInventories[0].Inventory;
             int invState = playerInventory.ServerRequestCounter;
+            int attempt = 0;
+            // Use item highlight to reset item label position.
+            int highlight = 0;
+            int limit = 0;
             // List of item to pick.
             var itemList = GetItemToPick(window);
             if (itemList == null)
@@ -95,8 +100,28 @@ namespace SimplePickIt
 
                 // Current item to pick.
                 var nextItem = itemList[0];
+
+                // If the current item is not visible and there's item left in the list
+                while (!nextItem.Label.IsVisible)
+                {
+                    // Remove the item from the list.
+                    itemList.RemoveAt(0);
+
+                    if(itemList.Any())
+                    {
+                        // The next item become the current item to pick if there's any left.
+                        nextItem = itemList[0];
+                    }
+                    else
+                    {
+                        // Otherwise, start over.
+                        IsRunning = false;
+                        return;
+                    }
+                }
+                
                 // If the current item to pick is further than X unit of distance, stop.
-                if (nextItem.ItemOnGround.DistancePlayer > Settings.Range.Value)
+                if (nextItem.ItemOnGround.DistancePlayer > Settings.Range.Value || !nextItem.IsVisible)
                 {
                     IsRunning = false;
                     return;
@@ -128,11 +153,33 @@ namespace SimplePickIt
                 {
                     // Remove the item from the list of item we have to pick.
                     itemList.RemoveAt(0);
+                    attempt = 0;
+                }
+                else
+                {
+                    // Only try three time to pick an item, otherwise start over the process.
+                    attempt++;
                 }
                 // Update the counter with the new value.
                 invState = playerInventory.ServerRequestCounter;
-                
-            } while (Input.GetKeyState(Settings.PickUpKey.Value) && itemList.Any());
+                // Refresh item position via the Highlight button every 3-6 loop.
+                if(highlight == 0)
+                {
+                    limit = Random.Next(3, 7);
+                }
+                if(highlight == limit)
+                {
+                    Input.KeyDown(Settings.HighlightToggle.Value);
+                    Thread.Sleep(Random.Next(10, 20));
+                    Input.KeyUp(Settings.HighlightToggle.Value);
+                    Thread.Sleep(Random.Next(10, 20));
+                    Input.KeyDown(Settings.HighlightToggle.Value);
+                    Thread.Sleep(Random.Next(10, 20));
+                    Input.KeyUp(Settings.HighlightToggle.Value);
+                    highlight = -1;
+                }
+                highlight++;
+            } while (Input.GetKeyState(Settings.PickUpKey.Value) && itemList.Any() && attempt < 4);
 
             IsRunning = false;
             return;
