@@ -17,7 +17,8 @@ namespace SimplePickIt
     public class SimplePickIt : BaseSettingsPlugin<SimplePickItSettings>
     {
         private Stopwatch Timer { get; } = new Stopwatch();
-        private Random Random { get; } = new Random();
+        private Random Random { get; } = new Random();<
+        private static bool IsRunning { get; set; } = false;
 
         public override bool Initialise()
         {
@@ -29,45 +30,93 @@ namespace SimplePickIt
         {
             if (!Input.GetKeyState(Settings.PickUpKey.Value)) return null;
             if (!GameController.Window.IsForeground()) return null;
-            if (Timer.ElapsedMilliseconds < Settings.WaitTimeInMs.Value - 10 + Random.Next(0, 20)) return null;
+            if (IsRunning) return null;
 
             Timer.Restart();
 
             return new Job("SimplePickIt", PickItem);
         }
 
-        private LabelOnGround GetItemToPick(RectangleF window)
+        private List<LabelOnGround> GetItemToPick(RectangleF window)
         {
             var windowSize = new RectangleF(0, 0, window.Width, window.Height);
 
-            var closestLabel = GameController.Game.IngameState.IngameUi.ItemsOnGroundLabels
-                ?.Where(label => label.Address != 0
-                    && label.ItemOnGround?.Type != null
-                    && label.ItemOnGround.Type == EntityType.WorldItem
-                    && label.IsVisible
-                    && (label.CanPickUp || label.MaxTimeForPickUp.TotalSeconds <= 0)
-                    && (label.Label.GetClientRect().Center).PointInRectangle(windowSize)
-                    )
-                .OrderBy(label => label.ItemOnGround.DistancePlayer)
-                .FirstOrDefault();
+            List<LabelOnGround> ItemToGet = new List<LabelOnGround>();
 
-            return closestLabel;
+            if(GameController.Game.IngameState.IngameUi.ItemsOnGroundLabels != null)
+            {
+                ItemToGet = GameController.Game.IngameState.IngameUi.ItemsOnGroundLabels
+                    ?.Where(label => label.Address != 0
+                        && label.ItemOnGround?.Type != null
+                        && label.ItemOnGround.Type == EntityType.WorldItem
+                        && label.IsVisible
+                        && (label.CanPickUp || label.MaxTimeForPickUp.TotalSeconds <= 0)
+                        && (label.Label.GetClientRect().Center).PointInRectangle(windowSize)
+                        )
+                    .OrderBy(label => label.ItemOnGround.DistancePlayer)
+                    .ToList();
+            }
+
+            if (ItemToGet.Any())
+            {
+                return ItemToGet;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         private void PickItem()
         {
+            IsRunning = true;
+
+            float currentSpeed = 36 * (1 + ((float)Settings.MovementSpeed.Value / 100));
             var window = GameController.Window.GetWindowRectangle();
-            var nextItem = GetItemToPick(window);
-            if (nextItem == null) return;
 
-            var centerOfLabel = nextItem?.Label?.GetClientRect().Center 
-                + window.TopLeft
-                + new Vector2(Random.Next(0, 2), Random.Next(0, 2));
+            var itemList = GetItemToPick(window);
+            if (itemList == null)
+            {
+                IsRunning = false;
+                return;
+            }
 
-            if (!centerOfLabel.HasValue) return;
+            int i = itemList.Count() - 1;
 
-            Input.SetCursorPos(centerOfLabel.Value);
-            Input.Click(MouseButtons.Left);
+            do
+            {
+                itemList = itemList.OrderBy(label => label.ItemOnGround.DistancePlayer).Reverse().ToList();
+
+                foreach (var item in itemList)
+                {
+                    LogMsg(item.ItemOnGround.DistancePlayer.ToString());
+                }
+
+                var nextItem = itemList[i];
+                
+                var centerOfLabel = nextItem?.Label?.GetClientRect().Center
+                    + window.TopLeft
+                    + new Vector2(Random.Next(0, 2), Random.Next(0, 2));
+
+                if (!centerOfLabel.HasValue)
+                {
+                    IsRunning = false;
+                    return;
+                }
+
+                int waitTime = (int)((nextItem.ItemOnGround.DistancePlayer / currentSpeed) * 1000);
+
+                Input.SetCursorPos(centerOfLabel.Value);
+                Thread.Sleep(Random.Next(1, 3));
+                Input.Click(MouseButtons.Left);
+                Thread.Sleep(waitTime);
+
+                itemList.RemoveAt(i);
+                i--;
+
+            } while (Input.GetKeyState(Settings.PickUpKey.Value) && i != -1);
+
+            IsRunning = false;
         }
     }
 }
