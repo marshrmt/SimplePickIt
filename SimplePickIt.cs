@@ -1,4 +1,4 @@
-﻿using ExileCore;
+using ExileCore;
 using ExileCore.PoEMemory.Elements;
 using ExileCore.Shared.Enums;
 using ExileCore.Shared.Helpers;
@@ -57,9 +57,25 @@ namespace SimplePickIt
                     .ToList();
             }
 
+            
+
             if (ItemToGet.Any())
             {
-                return ItemToGet;
+                for (int i = ItemToGet.Count() - 1; i > -1; i--)
+                {
+                    if(ItemToGet[i].ItemOnGround.DistancePlayer > 50)
+                    {
+                        ItemToGet.Remove(ItemToGet[i]);
+                    }
+                }
+                if (ItemToGet.Any())
+                {
+                    return ItemToGet;
+                }
+                else
+                {
+                    return null;
+                }
             }
             else
             {
@@ -85,11 +101,9 @@ namespace SimplePickIt
 
             do
             {
-                itemList = itemList.OrderBy(label => label.ItemOnGround.DistancePlayer).Reverse().ToList();
-
-                foreach (var item in itemList)
+                if(i != 0)
                 {
-                    LogMsg(item.ItemOnGround.DistancePlayer.ToString());
+                    itemList = itemList.OrderBy(label => label.ItemOnGround.DistancePlayer).Reverse().ToList();
                 }
 
                 var nextItem = itemList[i];
