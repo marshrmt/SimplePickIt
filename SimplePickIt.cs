@@ -49,7 +49,6 @@ namespace SimplePickIt
                     ?.Where(label => label.Address != 0
                         && label.ItemOnGround?.Type != null
                         && label.ItemOnGround.Type == EntityType.WorldItem
-                        && label.ItemOnGround.IsTargetable
                         && label.IsVisible
                         && (label.Label.GetClientRect().Center).PointInRectangle(windowSize)
                         )
