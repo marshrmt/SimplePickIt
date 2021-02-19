@@ -57,25 +57,9 @@ namespace SimplePickIt
                     .ToList();
             }
 
-            
-
             if (ItemToGet.Any())
             {
-                for (int i = ItemToGet.Count() - 1; i > -1; i--)
-                {
-                    if(ItemToGet[i].ItemOnGround.DistancePlayer > 50)
-                    {
-                        ItemToGet.Remove(ItemToGet[i]);
-                    }
-                }
-                if (ItemToGet.Any())
-                {
-                    return ItemToGet;
-                }
-                else
-                {
-                    return null;
-                }
+                return ItemToGet;
             }
             else
             {
@@ -97,17 +81,18 @@ namespace SimplePickIt
                 return;
             }
 
-            int i = itemList.Count() - 1;
-
             do
             {
-                if(i != 0)
+                itemList = itemList.OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
+
+                var nextItem = itemList[0];
+
+                if (nextItem.ItemOnGround.DistancePlayer >= 50)
                 {
-                    itemList = itemList.OrderBy(label => label.ItemOnGround.DistancePlayer).Reverse().ToList();
+                    IsRunning = false;
+                    return;
                 }
 
-                var nextItem = itemList[i];
-                
                 var centerOfLabel = nextItem?.Label?.GetClientRect().Center
                     + window.TopLeft
                     + new Vector2(Random.Next(0, 2), Random.Next(0, 2));
@@ -118,19 +103,19 @@ namespace SimplePickIt
                     return;
                 }
 
-                int waitTime = (int)((nextItem.ItemOnGround.DistancePlayer / currentSpeed) * 1000);
+                int waitTime = (int)((nextItem.ItemOnGround.DistancePlayer / currentSpeed) * 1000 + GameController.IngameState.CurLatency);
 
                 Input.SetCursorPos(centerOfLabel.Value);
                 Thread.Sleep(Random.Next(1, 3));
                 Input.Click(MouseButtons.Left);
                 Thread.Sleep(waitTime);
 
-                itemList.RemoveAt(i);
-                i--;
+                itemList.RemoveAt(0);
 
-            } while (Input.GetKeyState(Settings.PickUpKey.Value) && i != -1);
+            } while (Input.GetKeyState(Settings.PickUpKey.Value) && itemList.Any());
 
             IsRunning = false;
+            return;
         }
     }
 }
