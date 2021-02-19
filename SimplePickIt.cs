@@ -50,7 +50,6 @@ namespace SimplePickIt
                         && label.ItemOnGround?.Type != null
                         && label.ItemOnGround.Type == EntityType.WorldItem
                         && label.IsVisible
-                        && (label.CanPickUp || label.MaxTimeForPickUp.TotalSeconds <= 0)
                         && (label.Label.GetClientRect().Center).PointInRectangle(windowSize)
                         )
                     .OrderBy(label => label.ItemOnGround.DistancePlayer)
@@ -83,7 +82,10 @@ namespace SimplePickIt
 
             do
             {
-                itemList = itemList.OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
+                if(itemList.Count() > 1)
+                {
+                    itemList = itemList.OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
+                }
 
                 var nextItem = itemList[0];
 
@@ -103,10 +105,10 @@ namespace SimplePickIt
                     return;
                 }
 
-                int waitTime = (int)((nextItem.ItemOnGround.DistancePlayer / currentSpeed) * 1000 + GameController.IngameState.CurLatency);
+                int waitTime = (int)((nextItem.ItemOnGround.DistancePlayer / currentSpeed) * 1000);
 
                 Input.SetCursorPos(centerOfLabel.Value);
-                Thread.Sleep(Random.Next(1, 3));
+                Thread.Sleep(Random.Next(10, 20));
                 Input.Click(MouseButtons.Left);
                 Thread.Sleep(waitTime);
 
