@@ -17,7 +17,7 @@ namespace SimplePickIt
     public class SimplePickIt : BaseSettingsPlugin<SimplePickItSettings>
     {
         private Stopwatch Timer { get; } = new Stopwatch();
-        private Random Random { get; } = new Random();<
+        private Random Random { get; } = new Random();
         private static bool IsRunning { get; set; } = false;
 
         public override bool Initialise()
