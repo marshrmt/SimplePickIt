@@ -70,9 +70,13 @@ namespace SimplePickIt
         {
             IsRunning = true;
 
+            // Static movement speed (might be off), would be nice to grab the current MS % of the player dynamically.
             float currentSpeed = 36 * (1 + ((float)Settings.MovementSpeed.Value / 100));
             var window = GameController.Window.GetWindowRectangle();
-
+            // Use ServerRequestCounter as a way to know if the item was picked.
+            var playerInventory = GameController.Game.IngameState.ServerData.PlayerInventories[0].Inventory;
+            int invState = playerInventory.ServerRequestCounter;
+            // List of item to pick.
             var itemList = GetItemToPick(window);
             if (itemList == null)
             {
@@ -80,40 +84,54 @@ namespace SimplePickIt
                 return;
             }
 
+            // Loop until the key is released or the list of item to pick get emptied out.
             do
             {
-                if(itemList.Count() > 1)
+                // Set the list in order of item closest to the player after a new item is picked.
+                if (itemList.Count() > 1)
                 {
                     itemList = itemList.OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
                 }
 
+                // Current item to pick.
                 var nextItem = itemList[0];
-
-                if (nextItem.ItemOnGround.DistancePlayer >= 50)
+                // If the current item to pick is further than X unit of distance, stop.
+                if (nextItem.ItemOnGround.DistancePlayer > Settings.Range.Value)
                 {
                     IsRunning = false;
                     return;
                 }
-
+                // Item label position on the screen.
                 var centerOfLabel = nextItem?.Label?.GetClientRect().Center
                     + window.TopLeft
                     + new Vector2(Random.Next(0, 2), Random.Next(0, 2));
-
+                
                 if (!centerOfLabel.HasValue)
                 {
                     IsRunning = false;
                     return;
                 }
-
+                // Calculate the amount of time required to reach and pick the item.
                 int waitTime = (int)((nextItem.ItemOnGround.DistancePlayer / currentSpeed) * 1000);
-
+                // We can add the latency if required
+                if(Settings.Latency.Value)
+                {
+                    waitTime += (int)GameController.Game.IngameState.CurLatency;
+                }
+                // Attempt to pick the item
                 Input.SetCursorPos(centerOfLabel.Value);
                 Thread.Sleep(Random.Next(10, 20));
                 Input.Click(MouseButtons.Left);
                 Thread.Sleep(waitTime);
-
-                itemList.RemoveAt(0);
-
+                // If the ServerRequestCounter goes up, the item was probably picked.
+                if (playerInventory.ServerRequestCounter != invState)
+                {
+                    // Remove the item from the list of item we have to pick.
+                    itemList.RemoveAt(0);
+                }
+                // Update the counter with the new value.
+                invState = playerInventory.ServerRequestCounter;
+                
             } while (Input.GetKeyState(Settings.PickUpKey.Value) && itemList.Any());
 
             IsRunning = false;
