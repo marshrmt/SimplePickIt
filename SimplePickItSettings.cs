@@ -12,6 +12,9 @@ namespace SimplePickIt
         [Menu("PickUp Hotkey")]
         public HotkeyNode PickUpKey { get; set; } = new HotkeyNode(Keys.F1);
 
+        [Menu("Toggle Highlighting Hotkey")]
+        public HotkeyNode HighlightToggle { get; set; } = new HotkeyNode(Keys.Z);
+
         [Menu("Current Movement Speed %")]
         public RangeNode<int> MovementSpeed { get; set; } = new RangeNode<int>(0, 0, 300);
         
