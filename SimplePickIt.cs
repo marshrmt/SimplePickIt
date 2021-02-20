@@ -70,13 +70,13 @@ namespace SimplePickIt
         {
             IsRunning = true;
 
-            // Static movement speed (might be off), would be nice to grab the current MS % of the player dynamically.
-            float currentSpeed = 36 * (1 + ((float)Settings.MovementSpeed.Value / 100));
+            // Static movement speed, would be nice to grab the current MS % of the player dynamically.
+            float currentSpeed = 39 * (1 + ((float)Settings.MovementSpeed.Value / 100));
+            // I think base speed is 40 but I've put 39 to compensate the extra latency.
+            
             var window = GameController.Window.GetWindowRectangle();
-            // Use ServerRequestCounter as a way to know if the item was picked.
-            var playerInventory = GameController.Game.IngameState.ServerData.PlayerInventories[0].Inventory;
-            int invState = playerInventory.ServerRequestCounter;
-            int attempt = 0;
+            // For the "waiting" loop
+            Stopwatch waitingTime = new Stopwatch();
             // Use item highlight to reset item label position.
             int highlight = 0;
             int limit = 0;
@@ -91,8 +91,35 @@ namespace SimplePickIt
             // Loop until the key is released or the list of item to pick get emptied out.
             do
             {
-                // Set the list in order of item closest to the player after a new item is picked.
-                if (itemList.Count() > 1)
+                // Refresh item position via the Highlight button every 3-6 loop.
+                if (Settings.MinLoop.Value != 0)
+                {
+                    if (highlight == 0)
+                    {
+                        if (Settings.MaxLoop.Value < Settings.MinLoop.Value)
+                        {
+                            int temp = Settings.MaxLoop.Value;
+                            Settings.MaxLoop.Value = Settings.MinLoop.Value;
+                            Settings.MinLoop.Value = temp;
+                        }
+                        limit = Random.Next(Settings.MinLoop.Value, Settings.MaxLoop.Value + 1);
+                    }
+                    if (highlight == limit)
+                    {
+                        Input.KeyDown(Settings.HighlightToggle.Value);
+                        Thread.Sleep(Random.Next(10, 20));
+                        Input.KeyUp(Settings.HighlightToggle.Value);
+                        Thread.Sleep(Random.Next(10, 20));
+                        Input.KeyDown(Settings.HighlightToggle.Value);
+                        Thread.Sleep(Random.Next(10, 20));
+                        Input.KeyUp(Settings.HighlightToggle.Value);
+                        highlight = -1;
+                    }
+                    highlight++;
+                }
+
+                // Set the list in order of item closest to the player.
+                if (itemList.Count() > 1 && itemList[1].ItemOnGround.DistancePlayer > 10)
                 {
                     itemList = itemList.OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
                 }
@@ -100,7 +127,7 @@ namespace SimplePickIt
                 // Current item to pick.
                 var nextItem = itemList[0];
 
-                // If the current item is not visible and there's item left in the list
+                // If the current item is not visible
                 while (!nextItem.Label.IsVisible)
                 {
                     // Remove the item from the list.
@@ -120,65 +147,51 @@ namespace SimplePickIt
                 }
                 
                 // If the current item to pick is further than X unit of distance, stop.
-                if (nextItem.ItemOnGround.DistancePlayer > Settings.Range.Value || !nextItem.IsVisible)
+                if (nextItem.ItemOnGround.DistancePlayer > Settings.Range.Value)
                 {
                     IsRunning = false;
                     return;
                 }
+
                 // Item label position on the screen.
                 var centerOfLabel = nextItem?.Label?.GetClientRect().Center
                     + window.TopLeft
                     + new Vector2(Random.Next(0, 2), Random.Next(0, 2));
-                
                 if (!centerOfLabel.HasValue)
                 {
                     IsRunning = false;
                     return;
                 }
+
                 // Calculate the amount of time required to reach and pick the item.
                 int waitTime = (int)((nextItem.ItemOnGround.DistancePlayer / currentSpeed) * 1000);
-                // We can add the latency if required
+
+                // Need the server latency + extra latency to not repeat the loop for the same item.
                 if(Settings.Latency.Value)
                 {
-                    waitTime += (int)GameController.Game.IngameState.CurLatency;
+                    waitTime += (int)GameController.Game.IngameState.CurLatency + 100;
                 }
+
                 // Attempt to pick the item
                 Input.SetCursorPos(centerOfLabel.Value);
-                Thread.Sleep(Random.Next(10, 20));
+                Thread.Sleep(Random.Next(15, 20));
                 Input.Click(MouseButtons.Left);
-                Thread.Sleep(waitTime);
-                // If the ServerRequestCounter goes up, the item was probably picked.
-                if (playerInventory.ServerRequestCounter != invState)
+
+                // Waiting loop
+                waitingTime.Start();
+                while (nextItem.ItemOnGround.IsTargetable && nextItem.IsVisible)
                 {
-                    // Remove the item from the list of item we have to pick.
-                    itemList.RemoveAt(0);
-                    attempt = 0;
+                    // If it take longer than the expected time, break.
+                    if (waitingTime.ElapsedMilliseconds > waitTime)
+                    {
+                        break;
+                    }
                 }
-                else
-                {
-                    // Only try three time to pick an item, otherwise start over the process.
-                    attempt++;
-                }
-                // Update the counter with the new value.
-                invState = playerInventory.ServerRequestCounter;
-                // Refresh item position via the Highlight button every 3-6 loop.
-                if(highlight == 0)
-                {
-                    limit = Random.Next(3, 7);
-                }
-                if(highlight == limit)
-                {
-                    Input.KeyDown(Settings.HighlightToggle.Value);
-                    Thread.Sleep(Random.Next(10, 20));
-                    Input.KeyUp(Settings.HighlightToggle.Value);
-                    Thread.Sleep(Random.Next(10, 20));
-                    Input.KeyDown(Settings.HighlightToggle.Value);
-                    Thread.Sleep(Random.Next(10, 20));
-                    Input.KeyUp(Settings.HighlightToggle.Value);
-                    highlight = -1;
-                }
-                highlight++;
-            } while (Input.GetKeyState(Settings.PickUpKey.Value) && itemList.Any() && attempt < 4);
+                waitingTime.Reset();
+
+                // Remove the item picked from the list.
+                itemList.RemoveAt(0);
+            } while (Input.GetKeyState(Settings.PickUpKey.Value) && itemList.Any());
 
             IsRunning = false;
             return;
