@@ -119,9 +119,12 @@ namespace SimplePickIt
                 }
 
                 // Set the list in order of item closest to the player.
-                if (itemList.Count() > 1 && itemList[1].ItemOnGround.DistancePlayer > 10)
+                if (itemList.Count() > 1)
                 {
-                    itemList = itemList.OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
+                    if(itemList[1].ItemOnGround.DistancePlayer > 10)
+                    {
+                        itemList = itemList.OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
+                    }
                 }
 
                 // Current item to pick.
