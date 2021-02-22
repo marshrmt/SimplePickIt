@@ -15,14 +15,14 @@ namespace SimplePickIt
         [Menu("Item pickup key : ")]
         public HotkeyNode PickUpKey { get; set; } = new HotkeyNode(Keys.F);
 
-        [Menu("Current Movement Speed %")]
-        public RangeNode<int> MovementSpeed { get; set; } = new RangeNode<int>(0, 0, 300);
-        
+        [Menu("Toggle highlighting : ")]
+        public HotkeyNode HighlightToggle { get; set; } = new HotkeyNode(Keys.Z);
+
         [Menu("Maximum Pickup Range in Unit")]
         public RangeNode<int> Range { get; set; } = new RangeNode<int>(50, 0, 100);
 
-        [Menu("Toggle highlighting : ")]
-        public HotkeyNode HighlightToggle { get; set; } = new HotkeyNode(Keys.Z);
+        [Menu("Maximum Wait Time per click")]
+        public RangeNode<int> MaxWaitTime { get; set; } = new RangeNode<int>(1000, 1000, 2000);
 
         [Menu("Number of attempt before refreshing label :")]
         public ButtonNode Text2 { get; set; } = new ButtonNode();
@@ -32,8 +32,5 @@ namespace SimplePickIt
 
         [Menu("Maximum")]
         public RangeNode<int> MaxLoop { get; set; } = new RangeNode<int>(10, 1, 10);
-
-        [Menu("Consider Latency?")]
-        public ToggleNode Latency { get; set; } = new ToggleNode(true);
     }
 }
