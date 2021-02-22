@@ -1,7 +1,6 @@
 using ExileCore;
 using ExileCore.PoEMemory.Elements;
 using ExileCore.Shared.Enums;
-using ExileCore.Shared.Helpers;
 using SharpDX;
 using System;
 using System.Collections.Generic;
@@ -68,6 +67,7 @@ namespace SimplePickIt
             Stopwatch waitingTime = new Stopwatch();
             int highlight = 0;
             int limit = 0;
+            LabelOnGround nextItem = null;
 
             var itemList = GetItemToPick();
             if (itemList == null)
@@ -99,13 +99,13 @@ namespace SimplePickIt
                     if (highlight == limit - 1)
                     {
                         Input.KeyDown(Settings.HighlightToggle.Value);
-                        Thread.Sleep(Random.Next(15, 20));
+                        Thread.Sleep(Random.Next(20, 25));
                         Input.KeyUp(Settings.HighlightToggle.Value);
-                        Thread.Sleep(Random.Next(15, 20));
+                        Thread.Sleep(Random.Next(20, 25));
                         Input.KeyDown(Settings.HighlightToggle.Value);
-                        Thread.Sleep(Random.Next(15, 20));
+                        Thread.Sleep(Random.Next(20, 25));
                         Input.KeyUp(Settings.HighlightToggle.Value);
-                        Thread.Sleep(Random.Next(15, 20));
+                        Thread.Sleep(Random.Next(20, 25));
                         highlight = -1;
                     }
                     highlight++;
@@ -116,7 +116,7 @@ namespace SimplePickIt
                     itemList = itemList.OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
                 }
 
-                var nextItem = itemList[0];
+                nextItem = itemList[0];
 
                 if (nextItem.ItemOnGround.DistancePlayer > Settings.Range.Value)
                 {
@@ -145,6 +145,7 @@ namespace SimplePickIt
                 waitingTime.Reset();
 
                 itemList.RemoveAt(0);
+                Thread.Sleep(Random.Next(15, 20));
             } while (Input.GetKeyState(Settings.PickUpKey.Value) && itemList.Any());
 
             IsRunning = false;
