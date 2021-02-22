@@ -103,12 +103,13 @@ namespace SimplePickIt
                     if (highlight == limit - 1)
                     {
                         Input.KeyDown(Settings.HighlightToggle.Value);
-                        Thread.Sleep(Random.Next(10, 20));
+                        Thread.Sleep(Random.Next(15, 20));
                         Input.KeyUp(Settings.HighlightToggle.Value);
-                        Thread.Sleep(Random.Next(10, 20));
+                        Thread.Sleep(Random.Next(15, 20));
                         Input.KeyDown(Settings.HighlightToggle.Value);
-                        Thread.Sleep(Random.Next(10, 20));
+                        Thread.Sleep(Random.Next(15, 20));
                         Input.KeyUp(Settings.HighlightToggle.Value);
+                        Thread.Sleep(Random.Next(15, 20));
                         highlight = -1;
                     }
                     highlight++;
