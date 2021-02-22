@@ -138,13 +138,16 @@ namespace SimplePickIt
                 Input.Click(MouseButtons.Left);
 
                 waitingTime.Start();
-                while (nextItem.ItemOnGround.IsTargetable && nextItem.IsVisible && waitingTime.ElapsedMilliseconds < Settings.MaxWaitTime.Value)
+                while (nextItem.ItemOnGround.IsTargetable && waitingTime.ElapsedMilliseconds < Settings.MaxWaitTime.Value)
                 {
                     ;
                 }
                 waitingTime.Reset();
 
-                itemList.RemoveAt(0);
+                if(!nextItem.ItemOnGround.IsTargetable)
+                {
+                    itemList.RemoveAt(0);
+                }
             } while (Input.GetKeyState(Settings.PickUpKey.Value) && itemList.Any());
 
             IsRunning = false;
