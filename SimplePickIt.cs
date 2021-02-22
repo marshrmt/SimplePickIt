@@ -7,9 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace SimplePickIt
@@ -34,6 +32,7 @@ namespace SimplePickIt
             if (IsRunning) return null;
 
             Timer.Restart();
+            IsRunning = true;
 
             return new Job("SimplePickIt", PickItem);
         }
@@ -44,7 +43,7 @@ namespace SimplePickIt
 
             List<LabelOnGround> ItemToGet = new List<LabelOnGround>();
 
-            if(GameController.Game.IngameState.IngameUi.ItemsOnGroundLabels != null)
+            if (GameController.Game.IngameState.IngameUi.ItemsOnGroundLabels != null)
             {
                 ItemToGet = GameController.Game.IngameState.IngameUi.ItemsOnGroundLabels
                     ?.Where(label => label.Address != 0
@@ -69,15 +68,11 @@ namespace SimplePickIt
 
         private void PickItem()
         {
-            IsRunning = true;
-
             var window = GameController.Window.GetWindowRectangle();
-            // For the "waiting" loop
             Stopwatch waitingTime = new Stopwatch();
-            // Use item highlight to reset item label position.
             int highlight = 0;
             int limit = 0;
-            // List of item to pick.
+
             var itemList = GetItemToPick(window);
             if (itemList == null)
             {
@@ -85,17 +80,14 @@ namespace SimplePickIt
                 return;
             }
 
-            // Loop until the key is released or the list of item to pick get emptied out.
             do
             {
-                // If the inventory is open, stop picking item.
                 if (GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible)
                 {
                     IsRunning = false;
                     return;
                 }
 
-                // Refresh item position via the Highlight button every 3-6 loop.
                 if (Settings.MinLoop.Value != 0)
                 {
                     if (Settings.MaxLoop.Value < Settings.MinLoop.Value)
@@ -122,23 +114,19 @@ namespace SimplePickIt
                     highlight++;
                 }
 
-                // Set the list in order of item closest to the player.
                 if (itemList.Count() > 1)
                 {
                     itemList = itemList.OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
                 }
 
-                // Current item to pick.
                 var nextItem = itemList[0];
-                
-                // If the current item to pick is further than X unit of distance, stop.
+
                 if (nextItem.ItemOnGround.DistancePlayer > Settings.Range.Value)
                 {
                     IsRunning = false;
                     return;
                 }
 
-                // Item label position on the screen.
                 var centerOfLabel = nextItem?.Label?.GetClientRect().Center
                     + window.TopLeft
                     + new Vector2(Random.Next(0, 2), Random.Next(0, 2));
@@ -148,7 +136,6 @@ namespace SimplePickIt
                     return;
                 }
 
-                // Attempt to pick the item
                 Input.SetCursorPos(centerOfLabel.Value);
                 Thread.Sleep(Random.Next(15, 20));
                 Input.Click(MouseButtons.Left);
@@ -156,11 +143,10 @@ namespace SimplePickIt
                 waitingTime.Start();
                 while (nextItem.ItemOnGround.IsTargetable && nextItem.IsVisible && waitingTime.ElapsedMilliseconds < Settings.MaxWaitTime.Value)
                 {
-                    ; // Waiting loop
+                    ;
                 }
                 waitingTime.Reset();
 
-                // Remove the item picked from the list.
                 itemList.RemoveAt(0);
             } while (Input.GetKeyState(Settings.PickUpKey.Value) && itemList.Any());
 
