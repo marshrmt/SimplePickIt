@@ -71,10 +71,6 @@ namespace SimplePickIt
         {
             IsRunning = true;
 
-            // Static movement speed, would be nice to grab the current MS % of the player dynamically.
-            float currentSpeed = 39 * (1 + ((float)Settings.MovementSpeed.Value / 100));
-            // I think base speed is 40 but I've put 39 to compensate the extra latency.
-            
             var window = GameController.Window.GetWindowRectangle();
             // For the "waiting" loop
             Stopwatch waitingTime = new Stopwatch();
@@ -134,25 +130,6 @@ namespace SimplePickIt
 
                 // Current item to pick.
                 var nextItem = itemList[0];
-
-                // If the current item is not visible
-                while (!nextItem.Label.IsVisible)
-                {
-                    // Remove the item from the list.
-                    itemList.RemoveAt(0);
-
-                    if(itemList.Any())
-                    {
-                        // The next item become the current item to pick if there's any left.
-                        nextItem = itemList[0];
-                    }
-                    else
-                    {
-                        // Otherwise, start over.
-                        IsRunning = false;
-                        return;
-                    }
-                }
                 
                 // If the current item to pick is further than X unit of distance, stop.
                 if (nextItem.ItemOnGround.DistancePlayer > Settings.Range.Value)
@@ -171,22 +148,13 @@ namespace SimplePickIt
                     return;
                 }
 
-                // Calculate the amount of time required to reach and pick the item.
-                int waitTime = (int)((nextItem.ItemOnGround.DistancePlayer / currentSpeed) * 1000);
-
-                // Need the server latency + extra latency to not repeat the loop for the same item.
-                if(Settings.Latency.Value)
-                {
-                    waitTime += (int)GameController.Game.IngameState.CurLatency + 100;
-                }
-
                 // Attempt to pick the item
                 Input.SetCursorPos(centerOfLabel.Value);
                 Thread.Sleep(Random.Next(15, 20));
                 Input.Click(MouseButtons.Left);
 
                 waitingTime.Start();
-                while (nextItem.ItemOnGround.IsTargetable && nextItem.IsVisible && waitingTime.ElapsedMilliseconds < waitTime)
+                while (nextItem.ItemOnGround.IsTargetable && nextItem.IsVisible && waitingTime.ElapsedMilliseconds < Settings.MaxWaitTime.Value)
                 {
                     ; // Waiting loop
                 }
