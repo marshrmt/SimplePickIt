@@ -94,17 +94,17 @@ namespace SimplePickIt
                 // Refresh item position via the Highlight button every 3-6 loop.
                 if (Settings.MinLoop.Value != 0)
                 {
+                    if (Settings.MaxLoop.Value < Settings.MinLoop.Value)
+                    {
+                        int temp = Settings.MaxLoop.Value;
+                        Settings.MaxLoop.Value = Settings.MinLoop.Value;
+                        Settings.MinLoop.Value = temp;
+                    }
                     if (highlight == 0)
                     {
-                        if (Settings.MaxLoop.Value < Settings.MinLoop.Value)
-                        {
-                            int temp = Settings.MaxLoop.Value;
-                            Settings.MaxLoop.Value = Settings.MinLoop.Value;
-                            Settings.MinLoop.Value = temp;
-                        }
                         limit = Random.Next(Settings.MinLoop.Value, Settings.MaxLoop.Value + 1);
                     }
-                    if (highlight == limit)
+                    if (highlight == limit - 1)
                     {
                         Input.KeyDown(Settings.HighlightToggle.Value);
                         Thread.Sleep(Random.Next(10, 20));
@@ -121,10 +121,7 @@ namespace SimplePickIt
                 // Set the list in order of item closest to the player.
                 if (itemList.Count() > 1)
                 {
-                    if(itemList[1].ItemOnGround.DistancePlayer > 10)
-                    {
-                        itemList = itemList.OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
-                    }
+                    itemList = itemList.OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
                 }
 
                 // Current item to pick.
@@ -180,15 +177,10 @@ namespace SimplePickIt
                 Thread.Sleep(Random.Next(15, 20));
                 Input.Click(MouseButtons.Left);
 
-                // Waiting loop
                 waitingTime.Start();
-                while (nextItem.ItemOnGround.IsTargetable && nextItem.IsVisible)
+                while (nextItem.ItemOnGround.IsTargetable && nextItem.IsVisible && waitingTime.ElapsedMilliseconds < waitTime)
                 {
-                    // If it take longer than the expected time, break.
-                    if (waitingTime.ElapsedMilliseconds > waitTime)
-                    {
-                        break;
-                    }
+                    ; // Waiting loop
                 }
                 waitingTime.Reset();
 
