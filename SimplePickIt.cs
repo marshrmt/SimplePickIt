@@ -37,10 +37,8 @@ namespace SimplePickIt
             return new Job("SimplePickIt", PickItem);
         }
 
-        private List<LabelOnGround> GetItemToPick(RectangleF window)
+        private List<LabelOnGround> GetItemToPick()
         {
-            var windowSize = new RectangleF(0, 0, window.Width, window.Height);
-
             List<LabelOnGround> ItemToGet = new List<LabelOnGround>();
 
             if (GameController.Game.IngameState.IngameUi.ItemsOnGroundLabels != null)
@@ -71,7 +69,7 @@ namespace SimplePickIt
             int highlight = 0;
             int limit = 0;
 
-            var itemList = GetItemToPick(window);
+            var itemList = GetItemToPick();
             if (itemList == null)
             {
                 IsRunning = false;
