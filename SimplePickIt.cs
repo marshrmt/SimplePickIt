@@ -113,7 +113,7 @@ namespace SimplePickIt
 
                 if (itemList.Count() > 1)
                 {
-                    itemList = itemList.Where(label => label != null).OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
+                    itemList = itemList.Where(label => label != null).Where(label => label.ItemOnGround != null).OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
                 }
 
                 nextItem = itemList[0];
