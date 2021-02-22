@@ -22,7 +22,7 @@ namespace SimplePickIt
         public RangeNode<int> Range { get; set; } = new RangeNode<int>(50, 0, 100);
 
         [Menu("Maximum Wait Time per click")]
-        public RangeNode<int> MaxWaitTime { get; set; } = new RangeNode<int>(1000, 1000, 2000);
+        public RangeNode<int> MaxWaitTime { get; set; } = new RangeNode<int>(1000, 200, 2000);
 
         [Menu("Number of attempt before refreshing label :")]
         public ButtonNode Text2 { get; set; } = new ButtonNode();
