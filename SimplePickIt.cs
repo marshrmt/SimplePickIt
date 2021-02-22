@@ -30,6 +30,7 @@ namespace SimplePickIt
         {
             if (!Input.GetKeyState(Settings.PickUpKey.Value)) return null;
             if (!GameController.Window.IsForeground()) return null;
+            if (GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible) return null;
             if (IsRunning) return null;
 
             Timer.Restart();
@@ -91,6 +92,13 @@ namespace SimplePickIt
             // Loop until the key is released or the list of item to pick get emptied out.
             do
             {
+                // If the inventory is open, stop picking item.
+                if (GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible)
+                {
+                    IsRunning = false;
+                    return;
+                }
+
                 // Refresh item position via the Highlight button every 3-6 loop.
                 if (Settings.MinLoop.Value != 0)
                 {
