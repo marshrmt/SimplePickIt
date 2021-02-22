@@ -113,7 +113,7 @@ namespace SimplePickIt
 
                 if (itemList.Count() > 1)
                 {
-                    itemList = itemList.OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
+                    itemList = itemList.Where(label => label != null).OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
                 }
 
                 nextItem = itemList[0];
@@ -145,7 +145,6 @@ namespace SimplePickIt
                 waitingTime.Reset();
 
                 itemList.RemoveAt(0);
-                Thread.Sleep(Random.Next(15, 20));
             } while (Input.GetKeyState(Settings.PickUpKey.Value) && itemList.Any());
 
             IsRunning = false;
