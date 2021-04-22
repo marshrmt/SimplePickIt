@@ -79,6 +79,7 @@ namespace SimplePickIt
             if (groundItem.HasComponent<Mods>())
             {
                 var mods = groundItem.GetComponent<Mods>();
+                LogMessage(mods?.ItemRarity);
                 return mods != null && mods.ItemRarity == "Unique";
             }
             else {
