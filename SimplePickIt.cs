@@ -47,7 +47,8 @@ namespace SimplePickIt
                         && label.ItemOnGround?.Type != null
                         && label.ItemOnGround.Type == EntityType.WorldItem
                         && label.IsVisible
-                        && label.CanPickUp)
+                        && label.CanPickUp
+                        && !IsUniqueItem(label))
                     .OrderBy(label => label.ItemOnGround.DistancePlayer)
                     .ToList();
             }
@@ -59,6 +60,29 @@ namespace SimplePickIt
             else
             {
                 return null;
+            }
+        }
+
+        private bool IsUniqueItem(LabelOnGround label) {
+            if (label == null) {
+                return false;
+            }
+
+            var itemItemOnGround = label.ItemOnGround;
+            var worldItem = itemItemOnGround?.GetComponent<WorldItem>();
+            var groundItem = worldItem?.ItemEntity;
+
+            if (groundItem == null) {
+                return false;
+            }
+
+            if (groundItem.HasComponent<Mods>())
+            {
+                var mods = groundItem.GetComponent<Mods>();
+                return mods != null && mods.ItemRarity == "Unique";
+            }
+            else {
+                return false;
             }
         }
 
