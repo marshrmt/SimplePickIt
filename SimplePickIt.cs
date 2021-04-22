@@ -1,5 +1,6 @@
 using ExileCore;
 using ExileCore.PoEMemory.Elements;
+using ExileCore.PoEMemory.Components;
 using ExileCore.Shared.Enums;
 using SharpDX;
 using System;
@@ -79,8 +80,7 @@ namespace SimplePickIt
             if (groundItem.HasComponent<Mods>())
             {
                 var mods = groundItem.GetComponent<Mods>();
-                //LogMessage(mods?.ItemRarity);
-                return mods != null && mods.ItemRarity == "Unique";
+                return mods != null && mods.ItemRarity == ItemRarity.Unique;
             }
             else {
                 return false;
