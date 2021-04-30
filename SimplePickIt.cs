@@ -19,6 +19,7 @@ namespace SimplePickIt
         private static bool IsRunning { get; set; } = false;
 
         private Vector3 startCoord;
+        private bool prevKeyState = false;
 
         public override bool Initialise()
         {
@@ -28,19 +29,22 @@ namespace SimplePickIt
 
         public override Job Tick()
         {
-            if (!Input.GetKeyState(Settings.PickUpKey.Value)) return null;
+            bool keyState = Input.GetKeyState(Settings.PickUpKey.Value);
+            if (keyState && !prevKeyState)
+            {
+                startCoord = GameController.Player.Pos;
+            }
+
+            prevKeyState = keyState;
+
+            if (!keyState) return null;
             if (!GameController.Window.IsForeground()) return null;
             if (GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible) return null;
             if (IsRunning) return null;
 
             Timer.Restart();
 
-            if (!IsRunning)
-            {
-                startCoord = GameController.Player.Pos;
-                IsRunning = true;
-                
-            }
+            IsRunning = true;
 
             return new Job("SimplePickIt", PickItem);
 
