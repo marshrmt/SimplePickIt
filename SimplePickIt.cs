@@ -161,8 +161,8 @@ namespace SimplePickIt
 
                     if (Vector3.Distance(nextItem.ItemOnGround.Pos, startCoord) > 900)
                     {
-                        itemList.RemoveAt(0);
-                        continue;
+                        IsRunning = false;
+                        return;
                     }
 
                     if (nextItem.ItemOnGround.DistancePlayer > Settings.Range.Value)
