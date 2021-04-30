@@ -18,6 +18,8 @@ namespace SimplePickIt
         private Random Random { get; } = new Random();
         private static bool IsRunning { get; set; } = false;
 
+        private Vector3 startCoord;
+
         public override bool Initialise()
         {
             Timer.Start();
@@ -32,9 +34,18 @@ namespace SimplePickIt
             if (IsRunning) return null;
 
             Timer.Restart();
-            IsRunning = true;
 
-            return new Job("SimplePickIt", PickItem);
+            if (IsRunning)
+            {
+                return null;
+            }
+            else
+            {
+                startCoord = GameController.Player.Pos;
+                IsRunning = true;
+                return new Job("SimplePickIt", PickItem);
+            }
+            
         }
 
         private List<LabelOnGround> GetItemToPick()
@@ -147,6 +158,12 @@ namespace SimplePickIt
                     nextItem = itemList[0];
 
                     if (nextItem.ItemOnGround.DistancePlayer > Settings.Range.Value)
+                    {
+                        IsRunning = false;
+                        return;
+                    }
+
+                    if (Vector3.Distance(nextItem.ItemOnGround.Pos, startCoord) > 90)
                     {
                         IsRunning = false;
                         return;
