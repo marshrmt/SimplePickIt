@@ -33,7 +33,6 @@ namespace SimplePickIt
             if (keyState && !prevKeyState)
             {
                 startCoord = GameController.Player.Pos;
-                LogMessage("saved player pos");
             }
 
             prevKeyState = keyState;
@@ -166,7 +165,7 @@ namespace SimplePickIt
                         return;
                     }
 
-                    if (Vector3.Distance(nextItem.ItemOnGround.Pos, startCoord) > 1000)
+                    if (Vector3.Distance(nextItem.ItemOnGround.Pos, startCoord) > 900)
                     {
                         itemList.RemoveAt(0);
                         continue;
