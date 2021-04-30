@@ -166,9 +166,10 @@ namespace SimplePickIt
                         return;
                     }
 
-                    if (Vector3.Distance(nextItem.ItemOnGround.BoundsCenterPos, startCoord) > 250)
+                    if (Vector3.Distance(nextItem.ItemOnGround.Pos, startCoord) > 1000)
                     {
-                        continue;
+                        IsRunning = false;
+                        return;
                     }
 
                     var centerOfLabel = nextItem?.Label?.GetClientRect().Center
