@@ -125,6 +125,19 @@ namespace SimplePickIt
                         return;
                     }
 
+                    if (itemList.Count() > 1)
+                    {
+                        itemList = itemList.Where(label => label != null).Where(label => label.ItemOnGround != null).OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
+                    }
+
+                    nextItem = itemList[0];
+
+                    if (Vector3.Distance(nextItem.ItemOnGround.Pos, startCoord) > 900)
+                    {
+                        itemList.RemoveAt(0);
+                        continue;
+                    }
+
                     if (Settings.MinLoop.Value != 0)
                     {
                         if (Settings.MaxLoop.Value < Settings.MinLoop.Value)
@@ -152,23 +165,10 @@ namespace SimplePickIt
                         highlight++;
                     }
 
-                    if (itemList.Count() > 1)
-                    {
-                        itemList = itemList.Where(label => label != null).Where(label => label.ItemOnGround != null).OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
-                    }
-
-                    nextItem = itemList[0];
-
                     if (nextItem.ItemOnGround.DistancePlayer > Settings.Range.Value)
                     {
                         IsRunning = false;
                         return;
-                    }
-
-                    if (Vector3.Distance(nextItem.ItemOnGround.Pos, startCoord) > 900)
-                    {
-                        itemList.RemoveAt(0);
-                        continue;
                     }
 
                     var centerOfLabel = nextItem?.Label?.GetClientRect().Center
