@@ -33,6 +33,7 @@ namespace SimplePickIt
             if (keyState && !prevKeyState)
             {
                 startCoord = GameController.Player.Pos;
+                LogMessage("saved player pos");
             }
 
             prevKeyState = keyState;
