@@ -166,7 +166,7 @@ namespace SimplePickIt
                         return;
                     }
 
-                    if (Vector3.Distance(nextItem.ItemOnGround.Pos, startCoord) > 250)
+                    if (Vector3.Distance(nextItem.ItemOnGround.BoundsCenterPos, startCoord) > 250)
                     {
                         continue;
                     }
