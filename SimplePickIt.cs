@@ -168,8 +168,8 @@ namespace SimplePickIt
 
                     if (Vector3.Distance(nextItem.ItemOnGround.Pos, startCoord) > 1000)
                     {
-                        IsRunning = false;
-                        return;
+                        itemList.RemoveAt(0);
+                        continue;
                     }
 
                     var centerOfLabel = nextItem?.Label?.GetClientRect().Center
