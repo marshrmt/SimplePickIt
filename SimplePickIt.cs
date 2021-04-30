@@ -35,17 +35,15 @@ namespace SimplePickIt
 
             Timer.Restart();
 
-            if (IsRunning)
-            {
-                return null;
-            }
-            else
+            if (!IsRunning)
             {
                 startCoord = GameController.Player.Pos;
                 IsRunning = true;
-                return new Job("SimplePickIt", PickItem);
+                
             }
-            
+
+            return new Job("SimplePickIt", PickItem);
+
         }
 
         private List<LabelOnGround> GetItemToPick()
