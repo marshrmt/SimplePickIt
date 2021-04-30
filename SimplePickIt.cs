@@ -125,19 +125,6 @@ namespace SimplePickIt
                         return;
                     }
 
-                    if (itemList.Count() > 1)
-                    {
-                        itemList = itemList.Where(label => label != null).Where(label => label.ItemOnGround != null).OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
-                    }
-
-                    nextItem = itemList[0];
-
-                    if (Vector3.Distance(nextItem.ItemOnGround.Pos, startCoord) > 900)
-                    {
-                        itemList.RemoveAt(0);
-                        continue;
-                    }
-
                     if (Settings.MinLoop.Value != 0)
                     {
                         if (Settings.MaxLoop.Value < Settings.MinLoop.Value)
@@ -163,6 +150,19 @@ namespace SimplePickIt
                             highlight = -1;
                         }
                         highlight++;
+                    }
+
+                    if (itemList.Count() > 1)
+                    {
+                        itemList = itemList.Where(label => label != null).Where(label => label.ItemOnGround != null).OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
+                    }
+
+                    nextItem = itemList[0];
+
+                    if (Vector3.Distance(nextItem.ItemOnGround.Pos, startCoord) > 900)
+                    {
+                        itemList.RemoveAt(0);
+                        continue;
                     }
 
                     if (nextItem.ItemOnGround.DistancePlayer > Settings.Range.Value)
