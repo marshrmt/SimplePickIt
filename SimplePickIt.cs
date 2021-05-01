@@ -90,6 +90,12 @@ namespace SimplePickIt
                 return false;
             }
 
+            // Still pickup unique maps
+            if (GameController.Files.BaseItemTypes.Translate(groundItem.Path).ClassName == "Map")
+            {
+                return false;
+            }
+
             if (groundItem.HasComponent<Mods>())
             {
                 var mods = groundItem.GetComponent<Mods>();
