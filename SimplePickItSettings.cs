@@ -32,5 +32,8 @@ namespace SimplePickIt
 
         [Menu("Maximum")]
         public RangeNode<int> MaxLoop { get; set; } = new RangeNode<int>(10, 1, 10);
+
+        [Menu("Phase run hotkey : ")]
+        public HotkeyNode PhaseRunHotkey { get; set; } = new HotkeyNode(Keys.U);
     }
 }

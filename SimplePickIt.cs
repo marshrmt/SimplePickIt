@@ -186,6 +186,10 @@ namespace SimplePickIt
                         return;
                     }
 
+                    Input.KeyDown(Settings.PhaseRunHotkey.Value);
+                    Thread.Sleep(Random.Next(20, 25));
+                    Input.KeyUp(Settings.PhaseRunHotkey.Value);
+
                     Input.SetCursorPos(centerOfLabel.Value);
                     Thread.Sleep(Random.Next(15, 20));
                     Input.Click(MouseButtons.Left);
