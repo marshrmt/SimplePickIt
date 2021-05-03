@@ -244,8 +244,20 @@ namespace SimplePickIt
 
         public override void Render()
         {
-            //DrawText(string text, Vector2N position, Color color, int height, FontAlign align = FontAlign.Left)
-            Graphics.DrawText($"Item count : {playerInventoryItemsCount}", new Vector2(100, 100), Color.FromRgba(0x4400FF00), 48, FontAlign.Left);
+            Color backColor = Color.FromRgba(0x44FFFFFF);
+            Color progressColor = Color.FromRgba(0x4400FF00);
+
+            if (playerInventoryItemsCount > 30)
+            {
+                progressColor = Color.FromRgba(0x4400FFFF);
+            }
+            else if (playerInventoryItemsCount > 48)
+            {
+                progressColor = Color.FromRgba(0x440000FF);
+            }
+
+            Graphics.DrawBox(new RectangleF(100, 100, 100, 50), backColor, 3);
+            Graphics.DrawBox(new RectangleF(100, 100, playerInventoryItemsCount, 50), progressColor, 3);
         }
     }
 }
