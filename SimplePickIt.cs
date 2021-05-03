@@ -244,7 +244,8 @@ namespace SimplePickIt
 
         public override void Render()
         {
-            Graphics.DrawText($"Item count : {playerInventoryItemsCount}", new Vector2(100, 100));
+            //DrawText(string text, Vector2N position, Color color, int height, FontAlign align = FontAlign.Left)
+            Graphics.DrawText($"Item count : {playerInventoryItemsCount}", new Vector2(100, 100), Color.FromRgba(0x4400FF00), 48, FontAlign.Left);
         }
     }
 }
