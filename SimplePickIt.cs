@@ -247,17 +247,17 @@ namespace SimplePickIt
             Color backColor = Color.FromRgba(0x44FFFFFF);
             Color progressColor = Color.FromRgba(0x4400FF00);
 
-            if (playerInventoryItemsCount > 30)
-            {
-                progressColor = Color.FromRgba(0x4400FFFF);
-            }
-            else if (playerInventoryItemsCount > 48)
+            if (playerInventoryItemsCount > 48)
             {
                 progressColor = Color.FromRgba(0x440000FF);
             }
+            else if (playerInventoryItemsCount > 30)
+            {
+                progressColor = Color.FromRgba(0x4400FFFF);
+            }
 
             Graphics.DrawBox(new RectangleF(100, 100, 100, 50), backColor, 3);
-            Graphics.DrawBox(new RectangleF(100, 100, playerInventoryItemsCount, 50), progressColor, 3);
+            Graphics.DrawBox(new RectangleF(100, 100, playerInventoryItemsCount / 60 * 100, 50), progressColor, 3);
         }
     }
 }
