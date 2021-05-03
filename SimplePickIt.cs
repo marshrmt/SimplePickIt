@@ -37,7 +37,23 @@ namespace SimplePickIt
                 startCoord = GameController.Player.Pos;
             }
 
-            playerInventoryItemsCount = (int)GameController.IngameState.ServerData.GetPlayerInventoryBySlot(InventorySlotE.MainInventory1)?.TotalItemsCounts;
+            var _playerInventory = GameController.IngameState.ServerData.GetPlayerInventoryByType(InventoryTypeE.MainInventory);
+            int _itemsCount = 0;
+
+            if (_playerInventory != null)
+            {
+                foreach (var _slotItem in _playerInventory.InventorySlotItems)
+                {
+                    _itemsCount += _slotItem.SizeX * _slotItem.SizeY;
+                }
+            }
+
+            playerInventoryItemsCount = _itemsCount;
+
+            if (_itemsCount >= 60)
+            {
+                return null;
+            }
 
             prevKeyState = keyState;
 
@@ -114,6 +130,12 @@ namespace SimplePickIt
         {
             try
             {
+                if (playerInventoryItemsCount >= 60)
+                {
+                    IsRunning = false;
+                    return;
+                }
+
                 var window = GameController.Window.GetWindowRectangle();
                 Stopwatch waitingTime = new Stopwatch();
                 int highlight = 0;
