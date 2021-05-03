@@ -37,7 +37,7 @@ namespace SimplePickIt
                 startCoord = GameController.Player.Pos;
             }
 
-            playerInventoryItemsCount = (int) GameController.IngameState.ServerData.GetPlayerInventoryByType(InventoryTypeE.MainInventory)?.CountItems;
+            playerInventoryItemsCount = (int)GameController.IngameState.ServerData.GetPlayerInventoryByType(InventoryTypeE.MainInventory)?.TotalItemsCounts;
 
             prevKeyState = keyState;
 
