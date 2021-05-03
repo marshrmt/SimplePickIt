@@ -258,7 +258,7 @@ namespace SimplePickIt
 
             var windowRect = GameController.Window.GetWindowRectangle();
 
-            var x = 50;
+            var x = 25;
             var y = windowRect.Bottom - 300;
 
             Graphics.DrawBox(new RectangleF(x, y, 200, 100), backColor, 3);
