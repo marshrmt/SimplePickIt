@@ -257,7 +257,7 @@ namespace SimplePickIt
             }
 
             Graphics.DrawBox(new RectangleF(100, 100, 100, 50), backColor, 3);
-            Graphics.DrawBox(new RectangleF(100, 100, playerInventoryItemsCount / 60 * 100, 50), progressColor, 3);
+            Graphics.DrawBox(new RectangleF(100, 100, (float) playerInventoryItemsCount / 60 * 100, 50), progressColor, 3);
         }
     }
 }
