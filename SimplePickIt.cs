@@ -222,7 +222,7 @@ namespace SimplePickIt
 
         public override void Render()
         {
-            Graphics.DrawText("Item count : ", new Vector2(100, 100));
+            Graphics.DrawText($"Item count : {playerInventoryItemsCount}", new Vector2(100, 100));
         }
     }
 }
