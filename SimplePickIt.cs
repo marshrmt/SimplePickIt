@@ -21,6 +21,8 @@ namespace SimplePickIt
         private Vector3 startCoord;
         private bool prevKeyState = false;
 
+        private volatile int playerInventoryItemsCount = 0;
+
         public override bool Initialise()
         {
             Timer.Start();
@@ -34,6 +36,8 @@ namespace SimplePickIt
             {
                 startCoord = GameController.Player.Pos;
             }
+
+            playerInventoryItemsCount = (int) GameController.IngameState.ServerData.GetPlayerInventoryByType(InventoryTypeE.MainInventory)?.CountItems;
 
             prevKeyState = keyState;
 
@@ -214,6 +218,11 @@ namespace SimplePickIt
             {
                 IsRunning = false;
             }
+        }
+
+        public override void Render()
+        {
+            Graphics.DrawText("Item count : " + playerInventoryItemsCount, new Vector2(100, 100));
         }
     }
 }
