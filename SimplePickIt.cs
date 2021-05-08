@@ -110,8 +110,10 @@ namespace SimplePickIt
                 return false;
             }
 
+            var baseItemType = GameController.Files.BaseItemTypes.Translate(groundItem.Path);
+
             // Still pickup unique maps
-            if (GameController.Files.BaseItemTypes.Translate(groundItem.Path).ClassName == "Map")
+            if (baseItemType.ClassName == "Map")
             {
                 return false;
             }
@@ -127,7 +129,7 @@ namespace SimplePickIt
                 }
             }
 
-            LogMessage(label.ItemOnGround.RenderName);
+            LogMessage(baseItemType.BaseName);
 
             if (groundItem.HasComponent<Mods>())
             {
