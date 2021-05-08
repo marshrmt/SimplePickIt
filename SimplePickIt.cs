@@ -127,7 +127,7 @@ namespace SimplePickIt
                 }
             }
 
-            LogMessage(groundItem.RenderName);
+            LogMessage(label.ItemOnGround.RenderName);
 
             if (groundItem.HasComponent<Mods>())
             {
