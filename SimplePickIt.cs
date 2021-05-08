@@ -113,7 +113,7 @@ namespace SimplePickIt
             var baseItemType = GameController.Files.BaseItemTypes.Translate(groundItem.Path);
 
             // Still pickup unique maps
-            if (baseItemType.ClassName == "Map")
+            if (baseItemType?.ClassName != null && baseItemType.ClassName == "Map")
             {
                 return false;
             }
@@ -129,12 +129,36 @@ namespace SimplePickIt
                 }
             }
 
-            LogMessage(baseItemType.BaseName);
+            string[] bestUniques = {
+                //t1
+                "Blood Raiment", "Crusader Boots", "Crusader Helmet", "Ezomyte Tower Shield", "Fluted Bascinet",
+                "Greatwolf Talisman", "Jewelled Foil", "Jingling Spirit Shield", "Large Cluster Jewel", "Occultist's Vestmentx",
+                "Ornate Quiver", "Prismatic Jewel", "Prophecy Wand", "Rawhide Boots", "Ruby Flask", "Sapphire Flask", "Siege Axe",
+                "Silk Gloves", "Timeless Jewel", "Vaal Rapier",
+                //t2
+                "Zodiac Leather", "Granite Flask", "Ezomyte Dagger"
+            };
+
 
             if (groundItem.HasComponent<Mods>())
             {
                 var mods = groundItem.GetComponent<Mods>();
-                return mods != null && mods.ItemRarity == ItemRarity.Unique;
+
+                if (mods != null && mods.ItemRarity == ItemRarity.Unique)
+                {
+                    if (baseItemType?.BaseName != null && baseItemType.BaseName != "")
+                    {
+                        return !(bestUniques.Contains(baseItemType.BaseName));
+                    }
+                    else
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
             }
             else {
                 return false;
@@ -145,12 +169,6 @@ namespace SimplePickIt
         {
             try
             {
-                if (playerInventoryItemsCount >= 60)
-                {
-                    IsRunning = false;
-                    return;
-                }
-
                 var window = GameController.Window.GetWindowRectangle();
                 Stopwatch waitingTime = new Stopwatch();
                 int highlight = 0;
@@ -205,6 +223,17 @@ namespace SimplePickIt
                     }
 
                     nextItem = itemList[0];
+
+                    var itemItemOnGround = nextItem.ItemOnGround;
+                    var worldItem = itemItemOnGround?.GetComponent<WorldItem>();
+                    var groundItem = worldItem?.ItemEntity;
+                    var baseItemType = GameController.Files.BaseItemTypes.Translate(groundItem.Path);
+
+                    if (baseItemType?.ClassName != null && baseItemType.ClassName != "Currency" && playerInventoryItemsCount >= 60)
+                    {
+                        IsRunning = false;
+                        return;
+                    }
 
                     if (Vector3.Distance(nextItem.ItemOnGround.Pos, startCoord) > 900)
                     {
