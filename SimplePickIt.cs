@@ -116,13 +116,20 @@ namespace SimplePickIt
                 return false;
             }
 
+            if (groundItem.HasComponent<Sockets>())
+            {
+                var sockets = groundItem.GetComponent<Sockets>();
+
+                // pickup 6l uniques
+                if (sockets != null && sockets.LargestLinkSize == 6)
+                {
+                    return false;
+                }
+            }
+            
             if (groundItem.HasComponent<Mods>())
             {
                 var mods = groundItem.GetComponent<Mods>();
-                if (mods.ItemRarity == ItemRarity.Unique)
-                {
-                    LogMessage($"unique name: {mods.UniqueName}");
-                }
                 return mods != null && mods.ItemRarity == ItemRarity.Unique;
             }
             else {
