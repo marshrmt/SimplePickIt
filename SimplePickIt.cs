@@ -120,13 +120,15 @@ namespace SimplePickIt
             {
                 var sockets = groundItem.GetComponent<Sockets>();
 
-                // pickup 6l uniques
+                // pickup 6l even if uniques
                 if (sockets != null && sockets.LargestLinkSize == 6)
                 {
                     return false;
                 }
             }
-            
+
+            LogMessage(groundItem.RenderName);
+
             if (groundItem.HasComponent<Mods>())
             {
                 var mods = groundItem.GetComponent<Mods>();
