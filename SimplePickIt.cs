@@ -103,6 +103,12 @@ namespace SimplePickIt
             }
 
             var itemItemOnGround = label.ItemOnGround;
+
+            if (itemItemOnGround == null || !(itemItemOnGround.HasComponent<WorldItem>()))
+            {
+                return false;
+            }
+
             var worldItem = itemItemOnGround?.GetComponent<WorldItem>();
             var groundItem = worldItem?.ItemEntity;
 
@@ -225,14 +231,17 @@ namespace SimplePickIt
                     nextItem = itemList[0];
 
                     var itemItemOnGround = nextItem.ItemOnGround;
-                    var worldItem = itemItemOnGround?.GetComponent<WorldItem>();
-                    var groundItem = worldItem?.ItemEntity;
-                    var baseItemType = GameController.Files.BaseItemTypes.Translate(groundItem.Path);
-
-                    if (baseItemType?.ClassName != null && baseItemType.ClassName != "Currency" && playerInventoryItemsCount >= 60)
+                    if (itemItemOnGround != null && itemItemOnGround.HasComponent<WorldItem>())
                     {
-                        IsRunning = false;
-                        return;
+                        var worldItem = itemItemOnGround?.GetComponent<WorldItem>();
+                        var groundItem = worldItem?.ItemEntity;
+                        var baseItemType = GameController.Files.BaseItemTypes.Translate(groundItem.Path);
+
+                        if (baseItemType?.ClassName != null && baseItemType.ClassName != "Currency" && playerInventoryItemsCount >= 60)
+                        {
+                            IsRunning = false;
+                            return;
+                        }
                     }
 
                     if (Vector3.Distance(nextItem.ItemOnGround.Pos, startCoord) > 900)
