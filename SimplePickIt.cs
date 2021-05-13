@@ -124,6 +124,11 @@ namespace SimplePickIt
                 return false;
             }
 
+            // Dont pickup non currency if inventory is full
+            if (baseItemType?.ClassName != null && baseItemType.ClassName != "StackableCurrency" && playerInventoryItemsCount >= 60) {
+                return true;
+            }
+
             if (groundItem.HasComponent<Sockets>())
             {
                 var sockets = groundItem.GetComponent<Sockets>();
@@ -229,22 +234,6 @@ namespace SimplePickIt
                     }
 
                     nextItem = itemList[0];
-
-                    var itemItemOnGround = nextItem.ItemOnGround;
-                    if (itemItemOnGround != null && itemItemOnGround.HasComponent<WorldItem>())
-                    {
-                        var worldItem = itemItemOnGround?.GetComponent<WorldItem>();
-                        var groundItem = worldItem?.ItemEntity;
-                        var baseItemType = GameController.Files.BaseItemTypes.Translate(groundItem.Path);
-
-                        LogMessage($"{baseItemType.ClassName} {playerInventoryItemsCount}");
-
-                        if (baseItemType?.ClassName != null && baseItemType.ClassName != "StackableCurrency" && playerInventoryItemsCount >= 60)
-                        {
-                            IsRunning = false;
-                            return;
-                        }
-                    }
 
                     if (Vector3.Distance(nextItem.ItemOnGround.Pos, startCoord) > 900)
                     {
