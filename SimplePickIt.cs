@@ -237,6 +237,8 @@ namespace SimplePickIt
                         var groundItem = worldItem?.ItemEntity;
                         var baseItemType = GameController.Files.BaseItemTypes.Translate(groundItem.Path);
 
+                        LogMessage($"{baseItemType.ClassName} {playerInventoryItemsCount}")
+
                         if (baseItemType?.ClassName != null && baseItemType.ClassName != "StackableCurrency" && playerInventoryItemsCount >= 60)
                         {
                             IsRunning = false;
