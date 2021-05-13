@@ -49,12 +49,7 @@ namespace SimplePickIt
             }
 
             playerInventoryItemsCount = _itemsCount;
-
-            if (_itemsCount >= 60)
-            {
-                return null;
-            }
-
+            
             prevKeyState = keyState;
 
             if (!keyState) return null;
