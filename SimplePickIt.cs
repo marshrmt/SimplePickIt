@@ -52,6 +52,8 @@ namespace SimplePickIt
                             ImGuiNative.ImFontAtlas_AddFontFromFileTTF(io.Fonts.NativePtr, f, fontSize, null,
                                 imFontAtlasGetGlyphRangesCyrillic), fontPath, fontSize);
                     }
+
+                    CoreSettings.Font.Values = new List<string>(fonts.Keys);
                 }
             }
             else
@@ -349,7 +351,7 @@ namespace SimplePickIt
             Graphics.DrawBox(new RectangleF(x, y, 200, 100), backColor, 3);
             Graphics.DrawBox(new RectangleF(x, y, (float) playerInventoryItemsCount / 60 * 200, 100), progressColor, 3);
 
-            Graphics.DrawText("Test font size container", new Vector2(100, 100), Color.Red, BigFont);
+            //Graphics.DrawText("Test font size container", new Vector2(100, 100), Color.Red, BigFont);
         }
     }
 }
