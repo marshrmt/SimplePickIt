@@ -2,7 +2,6 @@ using ExileCore;
 using ExileCore.PoEMemory.Elements;
 using ExileCore.PoEMemory.Components;
 using ExileCore.Shared.Enums;
-using ExileCore.RenderQ;
 using SharpDX;
 using System;
 using System.Collections.Generic;
@@ -10,8 +9,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
-using ImGuiNET;
-using System.Text;
 
 namespace SimplePickIt
 {
@@ -25,7 +22,7 @@ namespace SimplePickIt
 
         private volatile int playerInventoryItemsCount = 0;
 
-        private string BigFont = "Constantine:48";
+        private string BigFont = "calibri:48";
 
         public override bool Initialise()
         {
@@ -35,25 +32,14 @@ namespace SimplePickIt
 
         private unsafe void InitBigFont()
         {
-            if (Graphics?.LowLevel?.ImGuiRender?.fonts != null && Graphics?.LowLevel?.ImGuiRender?.io != null)
+            if (Graphics?.LowLevel?.ImGuiRender?.fonts != null)
             {
                 if (!Graphics.LowLevel.ImGuiRender.fonts.ContainsKey(BigFont))
                 {
-                    var io = Graphics.LowLevel.ImGuiRender.io;
-                    var imFontAtlasGetGlyphRangesCyrillic = ImGuiNative.ImFontAtlas_GetGlyphRangesCyrillic(io.Fonts.NativePtr);
-                    var split = BigFont.Split(':');
-                    var fontPath = "fonts\\" + split[0] + ".ttf";
-                    
-                    var fontSize = int.Parse(split[1]);
-                    var bytes = Encoding.UTF8.GetBytes(fontPath);
-                    LogMessage($"loading font: {fontPath} | {fontSize}");
-                    fixed (byte* f = &bytes[0])
+                    if (Graphics.LowLevel.ImGuiRender.fonts.ContainsKey("calibri:24"))
                     {
-                        Graphics.LowLevel.ImGuiRender.fonts[BigFont] = new FontContainer(
-                            ImGuiNative.ImFontAtlas_AddFontFromFileTTF(io.Fonts.NativePtr, f, fontSize, null,
-                                imFontAtlasGetGlyphRangesCyrillic), fontPath, fontSize);
+                        BigFont = "calibri:24";
                     }
-
                 }
             }
             else
