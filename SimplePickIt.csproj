@@ -38,7 +38,7 @@
     <Reference Include="ExileCore">
       <HintPath>..\..\sun\ExileCore.dll</HintPath>
     </Reference>
-    <Reference Include="ImGui.NET, Version=1.71.0.0, Culture=neutral, PublicKeyToken=null" />
+    <Reference Include="ImGui.NET" />
     <Reference Include="SharpDX.Mathematics">
       <HintPath>..\..\sun\SharpDX.Mathematics.dll</HintPath>
     </Reference>
