@@ -320,7 +320,8 @@ namespace SimplePickIt
             Graphics.DrawBox(new RectangleF(x, y, 200, 100), backColor, 3);
             Graphics.DrawBox(new RectangleF(x, y, (float) playerInventoryItemsCount / 60 * 200, 100), progressColor, 3);
 
-            Graphics.DrawText("Test font size container", new Vector2(100, 100), Color.Red, "calibri:48");
+            // need to add "calibri:48" to fonts/config.ini to use
+            //Graphics.DrawText("Test font size container", new Vector2(100, 100), Color.Red, "calibri:48");
         }
     }
 }
