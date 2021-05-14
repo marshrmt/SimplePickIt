@@ -30,7 +30,7 @@ namespace SimplePickIt
             return true;
         }
 
-        private unsafe void InitBigFont()
+        private void InitBigFont()
         {
             if (Graphics?.LowLevel?.ImGuiRender?.fonts != null)
             {

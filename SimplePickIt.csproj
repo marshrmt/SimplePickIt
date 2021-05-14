@@ -32,13 +32,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <PlatformTarget>x64</PlatformTarget>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ExileCore">
       <HintPath>..\..\sun\ExileCore.dll</HintPath>
     </Reference>
-    <Reference Include="ImGui.NET" />
     <Reference Include="SharpDX.Mathematics">
       <HintPath>..\..\sun\SharpDX.Mathematics.dll</HintPath>
     </Reference>
