@@ -181,6 +181,19 @@ namespace SimplePickIt
                 int limit = 0;
                 LabelOnGround nextItem = null;
 
+                // Calculate delay by items count, so dudes with less items loot first
+                if (playerInventoryItemsCount > 30)
+                {
+                    var sleepTime = 100 * (playerInventoryItemsCount - 30);
+                    waitingTime.Start();
+                    while (waitingTime.ElapsedMilliseconds < sleepTime)
+                    {
+                        ;
+                    }
+                    waitingTime.Reset();
+
+                }
+
                 var itemList = GetItemToPick();
                 if (itemList == null)
                 {
@@ -257,7 +270,11 @@ namespace SimplePickIt
 
                     Input.SetCursorPos(centerOfLabel.Value);
                     Thread.Sleep(Random.Next(15, 20));
-                    Input.Click(MouseButtons.Left);
+
+                    if (nextItem.ItemOnGround.IsValid && nextItem.ItemOnGround.IsTargetable)
+                    {
+                        Input.Click(MouseButtons.Left);
+                    }
 
                     waitingTime.Start();
                     while (nextItem.ItemOnGround.IsTargetable && waitingTime.ElapsedMilliseconds < Settings.MaxWaitTime.Value)
