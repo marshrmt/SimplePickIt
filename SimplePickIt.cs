@@ -2,6 +2,7 @@ using ExileCore;
 using ExileCore.PoEMemory.Elements;
 using ExileCore.PoEMemory.Components;
 using ExileCore.Shared.Enums;
+using ExileCore.RenderQ;
 using SharpDX;
 using System;
 using System.Collections.Generic;
@@ -9,12 +10,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using ImGuiNET;
+using System.Text;
 
 namespace SimplePickIt
 {
     public class SimplePickIt : BaseSettingsPlugin<SimplePickItSettings>
     {
-        private Stopwatch Timer { get; } = new Stopwatch();
         private Random Random { get; } = new Random();
         private static bool IsRunning { get; set; } = false;
 
@@ -23,10 +25,39 @@ namespace SimplePickIt
 
         private volatile int playerInventoryItemsCount = 0;
 
+        private string BigFont = "calibri:64";
+
         public override bool Initialise()
         {
-            Timer.Start();
+            InitBigFont();
             return true;
+        }
+
+        private unsafe void InitBigFont()
+        {
+            if (Graphics?.LowLevel?.ImGuiRender?.fonts != null && Graphics?.LowLevel?.ImGuiRender?.io != null)
+            {
+                if (!Graphics.LowLevel.ImGuiRender.fonts.ContainsKey(BigFont))
+                {
+                    var io = Graphics.LowLevel.ImGuiRender.io;
+                    var imFontAtlasGetGlyphRangesCyrillic = ImGuiNative.ImFontAtlas_GetGlyphRangesCyrillic(io.Fonts.NativePtr);
+                    var split = BigFont.Split(':');
+                    var fontPath = "fonts\\" + split[0] + ".ttf";
+                    var fontSize = int.Parse(split[1]);
+                    var bytes = Encoding.UTF8.GetBytes(fontPath);
+
+                    fixed (byte* f = &bytes[0])
+                    {
+                        Graphics.LowLevel.ImGuiRender.fonts[BigFont] = new FontContainer(
+                            ImGuiNative.ImFontAtlas_AddFontFromFileTTF(io.Fonts.NativePtr, f, fontSize, null,
+                                imFontAtlasGetGlyphRangesCyrillic), fontPath, fontSize);
+                    }
+                }
+            }
+            else
+            {
+                BigFont = "Default:13";
+            }
         }
 
         public override Job Tick()
@@ -56,9 +87,7 @@ namespace SimplePickIt
             if (!GameController.Window.IsForeground()) return null;
             if (GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible) return null;
             if (IsRunning) return null;
-
-            Timer.Restart();
-
+            
             IsRunning = true;
 
             return new Job("SimplePickIt", PickItem);
@@ -320,8 +349,7 @@ namespace SimplePickIt
             Graphics.DrawBox(new RectangleF(x, y, 200, 100), backColor, 3);
             Graphics.DrawBox(new RectangleF(x, y, (float) playerInventoryItemsCount / 60 * 200, 100), progressColor, 3);
 
-            // need to add "calibri:48" to fonts/config.ini to use
-            //Graphics.DrawText("Test font size container", new Vector2(100, 100), Color.Red, "calibri:48");
+            Graphics.DrawText("Test font size container", new Vector2(100, 100), Color.Red, BigFont);
         }
     }
 }
