@@ -22,7 +22,7 @@ namespace SimplePickIt
 
         private volatile int playerInventoryItemsCount = 0;
 
-        private string BigFont = "calibri:48";
+        private string BigFont = "calibri:47";
 
         public override bool Initialise()
         {
@@ -36,9 +36,16 @@ namespace SimplePickIt
             {
                 if (!Graphics.LowLevel.ImGuiRender.fonts.ContainsKey(BigFont))
                 {
-                    if (Graphics.LowLevel.ImGuiRender.fonts.ContainsKey("calibri:24"))
+                    var split = BigFont.Split(':');
+                    var lowerFont = $"{split[0]}:24";
+
+                    if (Graphics.LowLevel.ImGuiRender.fonts.ContainsKey(lowerFont))
                     {
-                        BigFont = "calibri:24";
+                        BigFont = lowerFont;
+                    }
+                    else
+                    {
+                        BigFont = "Default:13";
                     }
                 }
             }
