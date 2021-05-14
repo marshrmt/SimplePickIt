@@ -186,7 +186,7 @@ namespace SimplePickIt
                 {
                     var sleepTime = 100 * (playerInventoryItemsCount - 30);
                     waitingTime.Start();
-                    while (waitingTime.ElapsedMilliseconds < sleepTime)
+                    while (waitingTime.ElapsedMilliseconds < sleepTime && Input.GetKeyState(Settings.PickUpKey.Value))
                     {
                         ;
                     }
