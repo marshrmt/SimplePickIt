@@ -25,7 +25,7 @@ namespace SimplePickIt
 
         private volatile int playerInventoryItemsCount = 0;
 
-        private string BigFont = "calibri:64";
+        private string BigFont = "calibri:60";
 
         public override bool Initialise()
         {
