@@ -43,9 +43,10 @@ namespace SimplePickIt
                     var imFontAtlasGetGlyphRangesCyrillic = ImGuiNative.ImFontAtlas_GetGlyphRangesCyrillic(io.Fonts.NativePtr);
                     var split = BigFont.Split(':');
                     var fontPath = "fonts\\" + split[0] + ".ttf";
+                    
                     var fontSize = int.Parse(split[1]);
                     var bytes = Encoding.UTF8.GetBytes(fontPath);
-
+                    LogMessage($"loading font: {fontPath} | {fontSize}");
                     fixed (byte* f = &bytes[0])
                     {
                         Graphics.LowLevel.ImGuiRender.fonts[BigFont] = new FontContainer(
@@ -53,7 +54,6 @@ namespace SimplePickIt
                                 imFontAtlasGetGlyphRangesCyrillic), fontPath, fontSize);
                     }
 
-                    CoreSettings.Font.Values = new List<string>(fonts.Keys);
                 }
             }
             else
