@@ -184,7 +184,7 @@ namespace SimplePickIt
                 // Calculate delay by items count, so dudes with less items loot first
                 if (playerInventoryItemsCount > 30)
                 {
-                    var sleepTime = 100 * (playerInventoryItemsCount - 30);
+                    var sleepTime = 50 * (playerInventoryItemsCount - 30);
                     waitingTime.Start();
                     while (waitingTime.ElapsedMilliseconds < sleepTime && Input.GetKeyState(Settings.PickUpKey.Value))
                     {
