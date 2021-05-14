@@ -22,11 +22,12 @@ namespace SimplePickIt
 
         private volatile int playerInventoryItemsCount = 0;
 
-        private string BigFont = "calibi:48";
+        // need to add font to "fonts\config.ini"
+        private string BigFont = "calibri:48";
 
         public override bool Initialise()
         {
-            InitBigFont();
+            //InitBigFont();
             return true;
         }
 
@@ -344,7 +345,7 @@ namespace SimplePickIt
             Graphics.DrawBox(new RectangleF(x, y, 200, 100), backColor, 3);
             Graphics.DrawBox(new RectangleF(x, y, (float) playerInventoryItemsCount / 60 * 200, 100), progressColor, 3);
 
-            Graphics.DrawText("Test font size container", new Vector2(100, 100), Color.Red, BigFont);
+            //Graphics.DrawText("Test font size container", new Vector2(100, 100), Color.Red, BigFont);
         }
     }
 }
