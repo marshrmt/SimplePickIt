@@ -138,10 +138,23 @@ namespace SimplePickIt
 
             var baseItemType = GameController.Files.BaseItemTypes.Translate(groundItem.Path);
 
+            baseItemType.
+
             // Dont pickup non currency if inventory is full
             if (baseItemType?.ClassName != null && baseItemType.ClassName != "StackableCurrency" && playerInventoryItemsCount >= 60)
             {
                 return true;
+            }
+
+            if (baseItemType?.ClassName != null && baseItemType.ClassName != "StackableCurrency")
+            {
+                int itemSize = baseItemType.Width * baseItemType.Height;
+
+                // dont pickup big items if we 100% know we cant
+                if (playerInventoryItemsCount + itemSize >= 60)
+                {
+                    return true;
+                }
             }
 
             // Still pickup unique maps
