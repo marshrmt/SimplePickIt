@@ -137,9 +137,7 @@ namespace SimplePickIt
             }
 
             var baseItemType = GameController.Files.BaseItemTypes.Translate(groundItem.Path);
-
-            baseItemType.
-
+            
             // Dont pickup non currency if inventory is full
             if (baseItemType?.ClassName != null && baseItemType.ClassName != "StackableCurrency" && playerInventoryItemsCount >= 60)
             {
