@@ -9,13 +9,14 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using System.Collections;
+using ExileCore.Shared;
 
 namespace SimplePickIt
 {
     public class SimplePickIt : BaseSettingsPlugin<SimplePickItSettings>
     {
         private Random Random { get; } = new Random();
-        private static bool IsRunning { get; set; } = false;
 
         private Vector3 startCoord;
         private bool prevKeyState = false;
@@ -56,6 +57,16 @@ namespace SimplePickIt
             }
         }
 
+        private bool IsRunConditionMet()
+        {
+            if (startCoord == null) return false;
+            if (!Input.GetKeyState(Settings.PickUpKey.Value)) return false;
+            if (!GameController.Window.IsForeground()) return false;
+            if (GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible) return false;
+
+            return true;
+        }
+
         public override Job Tick()
         {
             bool keyState = Input.GetKeyState(Settings.PickUpKey.Value);
@@ -79,15 +90,37 @@ namespace SimplePickIt
             
             prevKeyState = keyState;
 
-            if (!keyState) return null;
-            if (!GameController.Window.IsForeground()) return null;
-            if (GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible) return null;
-            if (IsRunning) return null;
-            
-            IsRunning = true;
+            return null;
+        }
 
-            return new Job("SimplePickIt", PickItem);
+        public override void Render()
+        {
+            Color backColor = Color.FromRgba(0x44FFFFFF);
+            Color progressColor = Color.FromRgba(0x4400FF00);
 
+            if (playerInventoryItemsCount > 48)
+            {
+                progressColor = Color.FromRgba(0x440000FF);
+            }
+            else if (playerInventoryItemsCount > 30)
+            {
+                progressColor = Color.FromRgba(0x4400FFFF);
+            }
+
+            var windowRect = GameController.Window.GetWindowRectangle();
+
+            var x = 25;
+            var y = windowRect.Bottom - 300;
+
+            Graphics.DrawBox(new RectangleF(x, y, 200, 100), backColor, 3);
+            Graphics.DrawBox(new RectangleF(x, y, (float)playerInventoryItemsCount / 60 * 200, 100), progressColor, 3);
+
+            //Graphics.DrawText("Test font size container", new Vector2(100, 100), Color.Red, BigFont);
+
+            if (!IsRunConditionMet()) return;
+
+            var coroutineWorker = new Coroutine(PickItemsCoroutine(), this, "SimplePickIt.PickItemsCoroutine");
+            Core.ParallelRunner.Run(coroutineWorker);
         }
 
         private List<LabelOnGround> GetItemToPick()
@@ -208,7 +241,7 @@ namespace SimplePickIt
             }
         }
 
-        private void PickItem()
+        private IEnumerator PickItemsCoroutine()
         {
             try
             {
@@ -221,16 +254,16 @@ namespace SimplePickIt
                 var itemList = GetItemToPick();
                 if (itemList == null)
                 {
-                    IsRunning = false;
-                    return;
+                    startCoord = null;
+                    yield break;
                 }
 
                 do
                 {
                     if (GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible)
                     {
-                        IsRunning = false;
-                        return;
+                        startCoord = null;
+                        yield break;
                     }
 
                     if (Settings.MinLoop.Value != 0)
@@ -269,14 +302,14 @@ namespace SimplePickIt
 
                     if (Vector3.Distance(nextItem.ItemOnGround.Pos, startCoord) > 900)
                     {
-                        IsRunning = false;
-                        return;
+                        startCoord = null;
+                        yield break;
                     }
 
                     if (nextItem.ItemOnGround.DistancePlayer > Settings.Range.Value)
                     {
-                        IsRunning = false;
-                        return;
+                        startCoord = null;
+                        yield break;
                     }
 
                     var centerOfLabel = nextItem?.Label?.GetClientRect().Center
@@ -284,8 +317,8 @@ namespace SimplePickIt
                         + new Vector2(Random.Next(0, 2), Random.Next(0, 2));
                     if (!centerOfLabel.HasValue)
                     {
-                        IsRunning = false;
-                        return;
+                        startCoord = null;
+                        yield break;
                     }
 
                     Input.KeyDown(Settings.PhaseRunHotkey.Value);
@@ -313,38 +346,16 @@ namespace SimplePickIt
                     }
                 } while (Input.GetKeyState(Settings.PickUpKey.Value) && itemList.Any());
 
-                IsRunning = false;
-                return;
+                startCoord = null;
+                yield break;
             }
             catch
             {
-                IsRunning = false;
+                startCoord = null;
+                yield break;
             }
         }
 
-        public override void Render()
-        {
-            Color backColor = Color.FromRgba(0x44FFFFFF);
-            Color progressColor = Color.FromRgba(0x4400FF00);
-
-            if (playerInventoryItemsCount > 48)
-            {
-                progressColor = Color.FromRgba(0x440000FF);
-            }
-            else if (playerInventoryItemsCount > 30)
-            {
-                progressColor = Color.FromRgba(0x4400FFFF);
-            }
-
-            var windowRect = GameController.Window.GetWindowRectangle();
-
-            var x = 25;
-            var y = windowRect.Bottom - 300;
-
-            Graphics.DrawBox(new RectangleF(x, y, 200, 100), backColor, 3);
-            Graphics.DrawBox(new RectangleF(x, y, (float) playerInventoryItemsCount / 60 * 200, 100), progressColor, 3);
-
-            //Graphics.DrawText("Test font size container", new Vector2(100, 100), Color.Red, BigFont);
-        }
+ 
     }
 }
