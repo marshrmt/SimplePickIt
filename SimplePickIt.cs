@@ -18,7 +18,7 @@ namespace SimplePickIt
     {
         private Random Random { get; } = new Random();
 
-        private Vector3 startCoord;
+        private Vector3 startCoord = null;
         private bool prevKeyState = false;
 
         private volatile int playerInventoryItemsCount = 0;
