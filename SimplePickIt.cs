@@ -19,6 +19,8 @@ namespace SimplePickIt
         private Random Random { get; } = new Random();
 
         private Vector3 startCoord = null;
+        private bool hasCoord = false;
+
         private bool prevKeyState = false;
 
         private volatile int playerInventoryItemsCount = 0;
@@ -59,7 +61,7 @@ namespace SimplePickIt
 
         private bool IsRunConditionMet()
         {
-            if (startCoord == null) return false;
+            if (!hasCoord) return false;
             if (!Input.GetKeyState(Settings.PickUpKey.Value)) return false;
             if (!GameController.Window.IsForeground()) return false;
             if (GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible) return false;
@@ -70,9 +72,16 @@ namespace SimplePickIt
         public override Job Tick()
         {
             bool keyState = Input.GetKeyState(Settings.PickUpKey.Value);
+
+            if (!keyState)
+            {
+                hasCoord = false;
+            }
+
             if (keyState && !prevKeyState)
             {
                 startCoord = GameController.Player.Pos;
+                hasCoord = true;
             }
 
             var _playerInventory = GameController.IngameState.ServerData.GetPlayerInventoryByType(InventoryTypeE.MainInventory);
@@ -254,7 +263,7 @@ namespace SimplePickIt
                 var itemList = GetItemToPick();
                 if (itemList == null)
                 {
-                    startCoord = null;
+                    hasCoord = false;
                     yield break;
                 }
 
@@ -262,7 +271,7 @@ namespace SimplePickIt
                 {
                     if (GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible)
                     {
-                        startCoord = null;
+                        hasCoord = false;
                         yield break;
                     }
 
@@ -302,13 +311,13 @@ namespace SimplePickIt
 
                     if (Vector3.Distance(nextItem.ItemOnGround.Pos, startCoord) > 900)
                     {
-                        startCoord = null;
+                        hasCoord = false;
                         yield break;
                     }
 
                     if (nextItem.ItemOnGround.DistancePlayer > Settings.Range.Value)
                     {
-                        startCoord = null;
+                        hasCoord = false;
                         yield break;
                     }
 
@@ -317,7 +326,7 @@ namespace SimplePickIt
                         + new Vector2(Random.Next(0, 2), Random.Next(0, 2));
                     if (!centerOfLabel.HasValue)
                     {
-                        startCoord = null;
+                        hasCoord = false;
                         yield break;
                     }
 
@@ -346,12 +355,12 @@ namespace SimplePickIt
                     }
                 } while (Input.GetKeyState(Settings.PickUpKey.Value) && itemList.Any());
 
-                startCoord = null;
+                hasCoord = false;
                 yield break;
             }
             catch
             {
-                startCoord = null;
+                hasCoord = false;
                 yield break;
             }
         }
