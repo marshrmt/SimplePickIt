@@ -61,7 +61,7 @@ namespace SimplePickIt
 
         private bool IsRunConditionMet()
         {
-            if (!hasCoord) return false;
+            //if (!hasCoord) return false;
             if (!Input.GetKeyState(Settings.PickUpKey.Value)) return false;
             if (!GameController.Window.IsForeground()) return false;
             if (GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible) return false;
@@ -309,11 +309,11 @@ namespace SimplePickIt
 
                     nextItem = itemList[0];
 
-                    if (Vector3.Distance(nextItem.ItemOnGround.Pos, startCoord) > 900)
+                   /* if (Vector3.Distance(nextItem.ItemOnGround.Pos, startCoord) > 900)
                     {
                         hasCoord = false;
                         yield break;
-                    }
+                    }*/
 
                     if (nextItem.ItemOnGround.DistancePlayer > Settings.Range.Value)
                     {
