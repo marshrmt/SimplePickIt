@@ -30,29 +30,37 @@ namespace SimplePickIt
 
         public override Job Tick()
         {
-            var gameWindow = GameController.Window.GetWindowRectangle();
-            var lootableGameWindow = new RectangleF(150, 150, gameWindow.Width - 150, gameWindow.Height - 150);
-
-            var _playerInventory = GameController.IngameState.ServerData.GetPlayerInventoryByType(InventoryTypeE.MainInventory);
-            int _itemsCount = 0;
-
-            if (_playerInventory != null)
+            try
             {
-                foreach (var _slotItem in _playerInventory.InventorySlotItems)
+                var gameWindow = GameController.Window.GetWindowRectangle();
+                var lootableGameWindow = new RectangleF(150, 150, gameWindow.Width - 150, gameWindow.Height - 150);
+
+                var _playerInventory = GameController.IngameState.ServerData.GetPlayerInventoryByType(InventoryTypeE.MainInventory);
+                int _itemsCount = 0;
+
+                if (_playerInventory != null)
                 {
-                    _itemsCount += _slotItem.SizeX * _slotItem.SizeY;
+                    foreach (var _slotItem in _playerInventory.InventorySlotItems)
+                    {
+                        _itemsCount += _slotItem.SizeX * _slotItem.SizeY;
+                    }
                 }
+
+                playerInventoryItemsCount = _itemsCount;
+
+                if (!Input.GetKeyState(Settings.PickUpKey.Value)) return null;
+                if (!_getItemsToPickTimer.IsRunning
+                    || _getItemsToPickTimer.ElapsedMilliseconds < Settings.DelayGetItemsToPick?.Value) return null;
+
+                _itemsToPick = GetItemsToPick(lootableGameWindow, 10);
+                _getItemsToPickTimer.Restart();
+                return null;
+
             }
-
-            playerInventoryItemsCount = _itemsCount;
-
-            if (!Input.GetKeyState(Settings.PickUpKey.Value)) return null;
-            if (!_getItemsToPickTimer.IsRunning
-                || _getItemsToPickTimer.ElapsedMilliseconds < Settings.DelayGetItemsToPick?.Value) return null;
-
-            _itemsToPick = GetItemsToPick(lootableGameWindow, 10);
-            _getItemsToPickTimer.Restart();
-            return null;
+            catch
+            {
+                _getItemsToPickTimer.Restart();
+            }
         }
 
         public override void Render()
