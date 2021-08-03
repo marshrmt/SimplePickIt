@@ -11,6 +11,7 @@ using System.Collections;
 using ExileCore.Shared;
 using ExileCore.Shared.Helpers;
 using System.Threading;
+using System.Collections.Generic;
 
 namespace SimplePickIt
 {
@@ -18,50 +19,24 @@ namespace SimplePickIt
     {
         private Random Random { get; } = new Random();
 
-        private LabelOnGround[] _itemsToPick = new LabelOnGround[10];
-        private Stopwatch _getItemsToPickTimer = new Stopwatch();
         private volatile int playerInventoryItemsCount = 0;
-
-        public override bool Initialise()
-        {
-            _getItemsToPickTimer.Start();
-            return base.Initialise();
-        }
 
         public override Job Tick()
         {
-            try
+            var _playerInventory = GameController.IngameState.ServerData.GetPlayerInventoryByType(InventoryTypeE.MainInventory);
+            int _itemsCount = 0;
+
+            if (_playerInventory != null)
             {
-                var gameWindow = GameController.Window.GetWindowRectangle();
-                var lootableGameWindow = new RectangleF(150, 150, gameWindow.Width - 150, gameWindow.Height - 150);
-
-                var _playerInventory = GameController.IngameState.ServerData.GetPlayerInventoryByType(InventoryTypeE.MainInventory);
-                int _itemsCount = 0;
-
-                if (_playerInventory != null)
+                foreach (var _slotItem in _playerInventory.InventorySlotItems)
                 {
-                    foreach (var _slotItem in _playerInventory.InventorySlotItems)
-                    {
-                        _itemsCount += _slotItem.SizeX * _slotItem.SizeY;
-                    }
+                    _itemsCount += _slotItem.SizeX * _slotItem.SizeY;
                 }
-
-                playerInventoryItemsCount = _itemsCount;
-
-                if (!Input.GetKeyState(Settings.PickUpKey.Value)) return null;
-                if (!_getItemsToPickTimer.IsRunning
-                    || _getItemsToPickTimer.ElapsedMilliseconds < Settings.DelayGetItemsToPick?.Value) return null;
-
-                _itemsToPick = GetItemsToPick(lootableGameWindow, 10);
-                _getItemsToPickTimer.Restart();
-                return null;
-
             }
-            catch
-            {
-                _getItemsToPickTimer.Restart();
-                return null;
-            }
+
+            playerInventoryItemsCount = _itemsCount;
+
+            return null;
         }
 
         public override void Render()
@@ -96,74 +71,129 @@ namespace SimplePickIt
         {
             if (!Input.GetKeyState(Settings.PickUpKey.Value)) return false;
             if (!GameController.Window.IsForeground()) return false;
+            if (GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible) return false;
 
             return true;
         }
 
-        private IEnumerator PickItems()
+        private List<LabelOnGround> GetItemToPick()
         {
-            var gameWindow = GameController.Window.GetWindowRectangle();
+            List<LabelOnGround> ItemToGet = new List<LabelOnGround>();
 
-            var clickTimer = new Stopwatch();
-            clickTimer.Start();
-            var firstRun = true;
-            while (_itemsToPick.Any() && Input.GetKeyState(Settings.PickUpKey.Value))
+            if (GameController.Game.IngameState.IngameUi.ItemsOnGroundLabels != null)
             {
-                var nextItem = _itemsToPick[0];
-                var onlyMoveMouse = ((long)Settings.DelayClicksInMs > clickTimer.ElapsedMilliseconds) && !firstRun;
+                ItemToGet = GameController.Game.IngameState.IngameUi.ItemsOnGroundLabels
+                    ?.Where(label => label.Address != 0
+                        && label.ItemOnGround?.Type != null
+                        && label.ItemOnGround.Type == EntityType.WorldItem
+                        && label.IsVisible
+                        && !IsUniqueItem(label))
+                    .OrderBy(label => label.ItemOnGround.DistancePlayer)
+                    .ToList();
+            }
 
-                yield return PickItem(nextItem, gameWindow, onlyMoveMouse);
-                if (!onlyMoveMouse)
-                {
-                    clickTimer.Restart();
-                    firstRun = false;
-                }
+            if (ItemToGet.Any())
+            {
+                return ItemToGet;
+            }
+            else
+            {
+                return null;
             }
         }
 
-        private IEnumerator PickItem(LabelOnGround itemToPick, RectangleF window, bool onlyMoveMouse)
+        private IEnumerator PickItems()
         {
-            var centerOfLabel = itemToPick?.Label?.GetClientRect().Center + window.TopLeft;
+            var window = GameController.Window.GetWindowRectangle();
+            Stopwatch waitingTime = new Stopwatch();
+            int highlight = 0;
+            int limit = 0;
+            LabelOnGround nextItem = null;
 
-            if (!centerOfLabel.HasValue) yield break;
-            if (centerOfLabel.Value.X <= 0 || centerOfLabel.Value.Y <= 0) yield break;
-            if (centerOfLabel.Value.X > 10000 || centerOfLabel.Value.Y > 10000) yield break;
-            if (float.IsNaN(centerOfLabel.Value.X) || float.IsNaN(centerOfLabel.Value.Y)) yield break;
+            var itemList = GetItemToPick();
+            if (itemList == null)
+            {
+                yield break;
+            }
 
-            Input.KeyDown(Settings.PhaseRunHotkey.Value);
-            Thread.Sleep(Random.Next(20, 25));
-            Input.KeyUp(Settings.PhaseRunHotkey.Value);
-            Thread.Sleep(Random.Next(20, 25));
+            do
+            {
+                if (GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible)
+                {
+                    yield break;
+                }
 
-            Input.SetCursorPos(centerOfLabel.Value);
+                if (Settings.MinLoop.Value != 0)
+                {
+                    if (Settings.MaxLoop.Value < Settings.MinLoop.Value)
+                    {
+                        int temp = Settings.MaxLoop.Value;
+                        Settings.MaxLoop.Value = Settings.MinLoop.Value;
+                        Settings.MinLoop.Value = temp;
+                    }
+                    if (highlight == 0)
+                    {
+                        limit = Random.Next(Settings.MinLoop.Value, Settings.MaxLoop.Value + 1);
+                    }
+                    if (highlight == limit - 1)
+                    {
+                        Input.KeyDown(Settings.HighlightToggle.Value);
+                        Thread.Sleep(Random.Next(20, 25));
+                        Input.KeyUp(Settings.HighlightToggle.Value);
+                        Thread.Sleep(Random.Next(20, 25));
+                        Input.KeyDown(Settings.HighlightToggle.Value);
+                        Thread.Sleep(Random.Next(20, 25));
+                        Input.KeyUp(Settings.HighlightToggle.Value);
+                        Thread.Sleep(Random.Next(20, 25));
+                        highlight = -1;
+                    }
+                    highlight++;
+                }
 
-            if (onlyMoveMouse) yield break;
-            Input.Click(MouseButtons.Left);
+                if (itemList.Count() > 1)
+                {
+                    itemList = itemList.Where(label => label != null).Where(label => label.ItemOnGround != null).OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
+                }
 
-            if (Settings.DebugLogging?.Value == true) DebugWindow.LogDebug($"SimplePickIt.PickItem -> {DateTime.Now:mm:ss.fff} clicked position x: {centerOfLabel.Value.X} y: {centerOfLabel.Value.Y}");
+                nextItem = itemList[0];
+
+                if (nextItem.ItemOnGround.DistancePlayer > Settings.Range.Value)
+                {
+                    yield break;
+                }
+
+                var centerOfLabel = nextItem?.Label?.GetClientRect().Center
+                    + window.TopLeft
+                    + new Vector2(Random.Next(0, 2), Random.Next(0, 2));
+                if (!centerOfLabel.HasValue)
+                {
+                    yield break;
+                }
+
+                Input.KeyDown(Settings.PhaseRunHotkey.Value);
+                Thread.Sleep(Random.Next(20, 25));
+                Input.KeyUp(Settings.PhaseRunHotkey.Value);
+                Thread.Sleep(Random.Next(20, 25));
+
+                Input.SetCursorPos(centerOfLabel.Value);
+                Thread.Sleep(Random.Next(15, 20));
+                Input.Click(MouseButtons.Left);
+
+                waitingTime.Start();
+                while (nextItem.ItemOnGround.IsTargetable && waitingTime.ElapsedMilliseconds < Settings.MaxWaitTime.Value)
+                {
+                    ;
+                }
+                waitingTime.Reset();
+
+                if (!nextItem.ItemOnGround.IsTargetable)
+                {
+                    itemList.RemoveAt(0);
+                }
+            } while (Input.GetKeyState(Settings.PickUpKey.Value) && itemList.Any());
+
+            yield break;
         }
-
-        private LabelOnGround[] GetItemsToPick(RectangleF window, int maxAmount = 10)
-        {
-            var windowSize = new RectangleF(150, 150, window.Width - 150, window.Height - 150);
-
-            var itemsToPick = GameController.Game.IngameState.IngameUi.ItemsOnGroundLabels
-                ?.Where(label => label.Address != 0
-                    && label.ItemOnGround?.Type != null
-                    && label.ItemOnGround.Type == EntityType.WorldItem
-                    && label.IsVisible
-                    && (label.CanPickUp || label.MaxTimeForPickUp.TotalSeconds <= 0)
-                    && label.ItemOnGround.DistancePlayer <= Settings.MaxDistance.Value
-                    && (label.Label.GetClientRect().Center).PointInRectangle(windowSize)
-                    && !IsUniqueItem(label)
-                    )
-                .OrderBy(label => label.ItemOnGround.DistancePlayer)
-                .Take(maxAmount)
-                .ToArray();
-
-            return itemsToPick;
-        }
-
 
         private bool IsUniqueItem(LabelOnGround label)
         {
@@ -190,7 +220,7 @@ namespace SimplePickIt
             var baseItemType = GameController.Files.BaseItemTypes.Translate(groundItem.Path);
 
             // Dont pickup non currency if inventory is full
-            if (baseItemType?.ClassName != null && baseItemType.ClassName != "StackableCurrency" && playerInventoryItemsCount >= 60)
+            /*if (baseItemType?.ClassName != null && baseItemType.ClassName != "StackableCurrency" && playerInventoryItemsCount >= 60)
             {
                 return true;
             }
@@ -204,7 +234,7 @@ namespace SimplePickIt
                 {
                     return true;
                 }
-            }
+            }*/
 
             // Still pickup unique maps
             if (baseItemType?.ClassName != null && baseItemType.ClassName == "Map")
