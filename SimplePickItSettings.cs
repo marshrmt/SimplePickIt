@@ -9,31 +9,22 @@ namespace SimplePickIt
     {
         public ToggleNode Enable { get; set; } = new ToggleNode(true);
 
-        [Menu("MAKE SURE YOUR HOTKEY IN-GAME MATCH WITH THOSE IN HERE")]
-        public ButtonNode Text { get; set; } = new ButtonNode();
-
         [Menu("Item pickup key : ")]
         public HotkeyNode PickUpKey { get; set; } = new HotkeyNode(Keys.F);
 
-        [Menu("Toggle highlighting : ")]
-        public HotkeyNode HighlightToggle { get; set; } = new HotkeyNode(Keys.Z);
-
-        [Menu("Maximum Pickup Range in Unit")]
-        public RangeNode<int> Range { get; set; } = new RangeNode<int>(50, 0, 100);
-
-        [Menu("Maximum Wait Time per click")]
-        public RangeNode<int> MaxWaitTime { get; set; } = new RangeNode<int>(1000, 200, 2000);
-
-        [Menu("Number of attempt before refreshing label :")]
-        public ButtonNode Text2 { get; set; } = new ButtonNode();
-
-        [Menu("Minimum (0 = off)")]
-        public RangeNode<int> MinLoop { get; set; } = new RangeNode<int>(5, 0, 10);
-
-        [Menu("Maximum")]
-        public RangeNode<int> MaxLoop { get; set; } = new RangeNode<int>(10, 1, 10);
-
         [Menu("Phase run hotkey : ")]
         public HotkeyNode PhaseRunHotkey { get; set; } = new HotkeyNode(Keys.U);
+
+        [Menu("Maximum Distance. 100 -> anywhere")]
+        public RangeNode<int> MaxDistance { get; set; } = new RangeNode<int>(100, 10, 100);
+
+        [Menu("Time between clicks in milliseconds")]
+        public RangeNode<int> DelayClicksInMs { get; set; } = new RangeNode<int>(40, 0, 100);
+
+        [Menu("Delay between search items to pick")]
+        public RangeNode<int> DelayGetItemsToPick { get; set; } = new RangeNode<int>(200, 50, 500);
+
+        [Menu("Activate extensive debug logging")]
+        public ToggleNode DebugLogging { get; set; } = new ToggleNode(false);
     }
 }

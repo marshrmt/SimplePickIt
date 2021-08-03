@@ -4,13 +4,13 @@ using ExileCore.PoEMemory.Components;
 using ExileCore.Shared.Enums;
 using SharpDX;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Windows.Forms;
 using System.Collections;
 using ExileCore.Shared;
+using ExileCore.Shared.Helpers;
+using System.Threading;
 
 namespace SimplePickIt
 {
@@ -18,71 +18,20 @@ namespace SimplePickIt
     {
         private Random Random { get; } = new Random();
 
-        private Vector3 startCoord;
-        private bool hasCoord = false;
-
-        private bool prevKeyState = false;
-
+        private LabelOnGround[] _itemsToPick = new LabelOnGround[10];
+        private Stopwatch _getItemsToPickTimer = new Stopwatch();
         private volatile int playerInventoryItemsCount = 0;
-
-        // need to add font to "fonts\config.ini"
-        private string BigFont = "calibri:48";
 
         public override bool Initialise()
         {
-            //InitBigFont();
-            return true;
-        }
-
-        private void InitBigFont()
-        {
-            if (Graphics?.LowLevel?.ImGuiRender?.fonts != null)
-            {
-                if (!Graphics.LowLevel.ImGuiRender.fonts.ContainsKey(BigFont))
-                {
-                    var split = BigFont.Split(':');
-                    var lowerFont = $"{split[0]}:24";
-
-                    if (Graphics.LowLevel.ImGuiRender.fonts.ContainsKey(lowerFont))
-                    {
-                        BigFont = lowerFont;
-                    }
-                    else
-                    {
-                        BigFont = "Default:13";
-                    }
-                }
-            }
-            else
-            {
-                BigFont = "Default:13";
-            }
-        }
-
-        private bool IsRunConditionMet()
-        {
-            //if (!hasCoord) return false;
-            if (!Input.GetKeyState(Settings.PickUpKey.Value)) return false;
-            if (!GameController.Window.IsForeground()) return false;
-            if (GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible) return false;
-
-            return true;
+            _getItemsToPickTimer.Start();
+            return base.Initialise();
         }
 
         public override Job Tick()
         {
-            bool keyState = Input.GetKeyState(Settings.PickUpKey.Value);
-
-            if (!keyState)
-            {
-                hasCoord = false;
-            }
-
-            if (keyState && !prevKeyState)
-            {
-                startCoord = GameController.Player.Pos;
-                hasCoord = true;
-            }
+            var gameWindow = GameController.Window.GetWindowRectangle();
+            var lootableGameWindow = new RectangleF(150, 150, gameWindow.Width - 150, gameWindow.Height - 150);
 
             var _playerInventory = GameController.IngameState.ServerData.GetPlayerInventoryByType(InventoryTypeE.MainInventory);
             int _itemsCount = 0;
@@ -96,9 +45,13 @@ namespace SimplePickIt
             }
 
             playerInventoryItemsCount = _itemsCount;
-            
-            prevKeyState = keyState;
 
+            if (!Input.GetKeyState(Settings.PickUpKey.Value)) return null;
+            if (!_getItemsToPickTimer.IsRunning
+                || _getItemsToPickTimer.ElapsedMilliseconds < Settings.DelayGetItemsToPick?.Value) return null;
+
+            _itemsToPick = GetItemsToPick(lootableGameWindow, 10);
+            _getItemsToPickTimer.Restart();
             return null;
         }
 
@@ -124,43 +77,89 @@ namespace SimplePickIt
             Graphics.DrawBox(new RectangleF(x, y, 200, 100), backColor, 3);
             Graphics.DrawBox(new RectangleF(x, y, (float)playerInventoryItemsCount / 60 * 200, 100), progressColor, 3);
 
-            //Graphics.DrawText("Test font size container", new Vector2(100, 100), Color.Red, BigFont);
-
             if (!IsRunConditionMet()) return;
 
-            var coroutineWorker = new Coroutine(PickItemsCoroutine(), this, "SimplePickIt.PickItemsCoroutine");
+            var coroutineWorker = new Coroutine(PickItems(), this, "SimplePickIt.PickItems");
             Core.ParallelRunner.Run(coroutineWorker);
         }
 
-        private List<LabelOnGround> GetItemToPick()
+        private bool IsRunConditionMet()
         {
-            List<LabelOnGround> ItemToGet = new List<LabelOnGround>();
+            if (!Input.GetKeyState(Settings.PickUpKey.Value)) return false;
+            if (!GameController.Window.IsForeground()) return false;
 
-            if (GameController.Game.IngameState.IngameUi.ItemsOnGroundLabels != null)
-            {
-                ItemToGet = GameController.Game.IngameState.IngameUi.ItemsOnGroundLabels
-                    ?.Where(label => label.Address != 0
-                        && label.ItemOnGround?.Type != null
-                        && label.ItemOnGround.Type == EntityType.WorldItem
-                        && label.IsVisible
-                        && label.CanPickUp
-                        && !IsUniqueItem(label))
-                    .OrderBy(label => label.ItemOnGround.DistancePlayer)
-                    .ToList();
-            }
+            return true;
+        }
 
-            if (ItemToGet.Any())
+        private IEnumerator PickItems()
+        {
+            var gameWindow = GameController.Window.GetWindowRectangle();
+
+            var clickTimer = new Stopwatch();
+            clickTimer.Start();
+            var firstRun = true;
+            while (_itemsToPick.Any() && Input.GetKeyState(Settings.PickUpKey.Value))
             {
-                return ItemToGet;
-            }
-            else
-            {
-                return null;
+                var nextItem = _itemsToPick[0];
+                var onlyMoveMouse = ((long)Settings.DelayClicksInMs > clickTimer.ElapsedMilliseconds) && !firstRun;
+
+                yield return PickItem(nextItem, gameWindow, onlyMoveMouse);
+                if (!onlyMoveMouse)
+                {
+                    clickTimer.Restart();
+                    firstRun = false;
+                }
             }
         }
 
-        private bool IsUniqueItem(LabelOnGround label) {
-            if (label == null) {
+        private IEnumerator PickItem(LabelOnGround itemToPick, RectangleF window, bool onlyMoveMouse)
+        {
+            var centerOfLabel = itemToPick?.Label?.GetClientRect().Center + window.TopLeft;
+
+            if (!centerOfLabel.HasValue) yield break;
+            if (centerOfLabel.Value.X <= 0 || centerOfLabel.Value.Y <= 0) yield break;
+            if (centerOfLabel.Value.X > 10000 || centerOfLabel.Value.Y > 10000) yield break;
+            if (float.IsNaN(centerOfLabel.Value.X) || float.IsNaN(centerOfLabel.Value.Y)) yield break;
+
+            Input.KeyDown(Settings.PhaseRunHotkey.Value);
+            Thread.Sleep(Random.Next(20, 25));
+            Input.KeyUp(Settings.PhaseRunHotkey.Value);
+            Thread.Sleep(Random.Next(20, 25));
+
+            Input.SetCursorPos(centerOfLabel.Value);
+
+            if (onlyMoveMouse) yield break;
+            Input.Click(MouseButtons.Left);
+
+            if (Settings.DebugLogging?.Value == true) DebugWindow.LogDebug($"SimplePickIt.PickItem -> {DateTime.Now:mm:ss.fff} clicked position x: {centerOfLabel.Value.X} y: {centerOfLabel.Value.Y}");
+        }
+
+        private LabelOnGround[] GetItemsToPick(RectangleF window, int maxAmount = 10)
+        {
+            var windowSize = new RectangleF(150, 150, window.Width - 150, window.Height - 150);
+
+            var itemsToPick = GameController.Game.IngameState.IngameUi.ItemsOnGroundLabels
+                ?.Where(label => label.Address != 0
+                    && label.ItemOnGround?.Type != null
+                    && label.ItemOnGround.Type == EntityType.WorldItem
+                    && label.IsVisible
+                    && (label.CanPickUp || label.MaxTimeForPickUp.TotalSeconds <= 0)
+                    && label.ItemOnGround.DistancePlayer <= Settings.MaxDistance.Value
+                    && (label.Label.GetClientRect().Center).PointInRectangle(windowSize)
+                    && !IsUniqueItem(label)
+                    )
+                .OrderBy(label => label.ItemOnGround.DistancePlayer)
+                .Take(maxAmount)
+                .ToArray();
+
+            return itemsToPick;
+        }
+
+
+        private bool IsUniqueItem(LabelOnGround label)
+        {
+            if (label == null)
+            {
                 return false;
             }
 
@@ -174,12 +173,13 @@ namespace SimplePickIt
             var worldItem = itemItemOnGround?.GetComponent<WorldItem>();
             var groundItem = worldItem?.ItemEntity;
 
-            if (groundItem == null) {
+            if (groundItem == null)
+            {
                 return false;
             }
 
             var baseItemType = GameController.Files.BaseItemTypes.Translate(groundItem.Path);
-            
+
             // Dont pickup non currency if inventory is full
             if (baseItemType?.ClassName != null && baseItemType.ClassName != "StackableCurrency" && playerInventoryItemsCount >= 60)
             {
@@ -215,14 +215,14 @@ namespace SimplePickIt
             }
 
             string[] bestUniques = {
-                //t1
-                "Blood Raiment", "Crusader Boots", "Crusader Helmet", "Ezomyte Tower Shield", "Fluted Bascinet",
-                "Greatwolf Talisman", "Jewelled Foil", "Jingling Spirit Shield", "Large Cluster Jewel", "Occultist's Vestment",
-                "Ornate Quiver", "Prismatic Jewel", "Prophecy Wand", "Rawhide Boots", "Ruby Flask", "Sapphire Flask", "Siege Axe",
-                "Silk Gloves", "Timeless Jewel", "Vaal Rapier",
-                //t2
-                "Zodiac Leather", "Granite Flask", "Ezomyte Dagger"
-            };
+                        //t1
+                        "Blood Raiment", "Crusader Boots", "Crusader Helmet", "Ezomyte Tower Shield", "Fluted Bascinet",
+                        "Greatwolf Talisman", "Jewelled Foil", "Jingling Spirit Shield", "Large Cluster Jewel", "Occultist's Vestment",
+                        "Ornate Quiver", "Prismatic Jewel", "Prophecy Wand", "Rawhide Boots", "Ruby Flask", "Sapphire Flask", "Siege Axe",
+                        "Silk Gloves", "Timeless Jewel", "Vaal Rapier",
+                        //t2
+                        "Zodiac Leather", "Granite Flask", "Ezomyte Dagger"
+                    };
 
 
             if (groundItem.HasComponent<Mods>())
@@ -245,126 +245,10 @@ namespace SimplePickIt
                     return false;
                 }
             }
-            else {
+            else
+            {
                 return false;
             }
         }
-
-        private IEnumerator PickItemsCoroutine()
-        {
-            try
-            {
-                var window = GameController.Window.GetWindowRectangle();
-                Stopwatch waitingTime = new Stopwatch();
-                int highlight = 0;
-                int limit = 0;
-                LabelOnGround nextItem = null;
-
-                var itemList = GetItemToPick();
-                if (itemList == null)
-                {
-                    hasCoord = false;
-                    yield break;
-                }
-
-                do
-                {
-                    if (GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible)
-                    {
-                        hasCoord = false;
-                        yield break;
-                    }
-
-                    if (Settings.MinLoop.Value != 0)
-                    {
-                        if (Settings.MaxLoop.Value < Settings.MinLoop.Value)
-                        {
-                            int temp = Settings.MaxLoop.Value;
-                            Settings.MaxLoop.Value = Settings.MinLoop.Value;
-                            Settings.MinLoop.Value = temp;
-                        }
-                        if (highlight == 0)
-                        {
-                            limit = Random.Next(Settings.MinLoop.Value, Settings.MaxLoop.Value + 1);
-                        }
-                        if (highlight == limit - 1)
-                        {
-                            Input.KeyDown(Settings.HighlightToggle.Value);
-                            Thread.Sleep(Random.Next(20, 25));
-                            Input.KeyUp(Settings.HighlightToggle.Value);
-                            Thread.Sleep(Random.Next(20, 25));
-                            Input.KeyDown(Settings.HighlightToggle.Value);
-                            Thread.Sleep(Random.Next(20, 25));
-                            Input.KeyUp(Settings.HighlightToggle.Value);
-                            Thread.Sleep(Random.Next(20, 25));
-                            highlight = -1;
-                        }
-                        highlight++;
-                    }
-
-                    if (itemList.Count() > 1)
-                    {
-                        itemList = itemList.Where(label => label != null).Where(label => label.ItemOnGround != null).OrderBy(label => label.ItemOnGround.DistancePlayer).ToList();
-                    }
-
-                    nextItem = itemList[0];
-
-                   /* if (Vector3.Distance(nextItem.ItemOnGround.Pos, startCoord) > 900)
-                    {
-                        hasCoord = false;
-                        yield break;
-                    }*/
-
-                    if (nextItem.ItemOnGround.DistancePlayer > Settings.Range.Value)
-                    {
-                        hasCoord = false;
-                        yield break;
-                    }
-
-                    var centerOfLabel = nextItem?.Label?.GetClientRect().Center
-                        + window.TopLeft
-                        + new Vector2(Random.Next(0, 2), Random.Next(0, 2));
-                    if (!centerOfLabel.HasValue)
-                    {
-                        hasCoord = false;
-                        yield break;
-                    }
-
-                    Input.KeyDown(Settings.PhaseRunHotkey.Value);
-                    Thread.Sleep(Random.Next(20, 25));
-                    Input.KeyUp(Settings.PhaseRunHotkey.Value);
-
-                    Input.SetCursorPos(centerOfLabel.Value);
-                    Thread.Sleep(Random.Next(15, 20));
-
-                    if (nextItem.ItemOnGround.IsValid && nextItem.ItemOnGround.IsTargetable)
-                    {
-                        Input.Click(MouseButtons.Left);
-                    }
-
-                    waitingTime.Start();
-                    while (nextItem.ItemOnGround.IsTargetable && waitingTime.ElapsedMilliseconds < Settings.MaxWaitTime.Value)
-                    {
-                        ;
-                    }
-                    waitingTime.Reset();
-
-                    if (!nextItem.ItemOnGround.IsTargetable)
-                    {
-                        itemList.RemoveAt(0);
-                    }
-                } while (Input.GetKeyState(Settings.PickUpKey.Value) && itemList.Any());
-
-                hasCoord = false;
-                yield break;
-            }
-            catch
-            {
-                hasCoord = false;
-                yield break;
-            }
-        }
-
- 
-    }
+    } 
 }
