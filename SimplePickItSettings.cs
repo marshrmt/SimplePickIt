@@ -16,7 +16,7 @@ namespace SimplePickIt
         public HotkeyNode PhaseRunHotkey { get; set; } = new HotkeyNode(Keys.U);
 
         [Menu("Maximum Distance. 100 -> anywhere")]
-        public RangeNode<int> MaxDistance { get; set; } = new RangeNode<int>(100, 10, 600);
+        public RangeNode<int> MaxDistance { get; set; } = new RangeNode<int>(700, 10, 700);
 
         [Menu("Time between clicks in milliseconds")]
         public RangeNode<int> DelayClicksInMs { get; set; } = new RangeNode<int>(40, 0, 100);
