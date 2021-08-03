@@ -60,6 +60,7 @@ namespace SimplePickIt
             catch
             {
                 _getItemsToPickTimer.Restart();
+                return null;
             }
         }
 
