@@ -71,7 +71,7 @@ namespace SimplePickIt
         {
             if (!Input.GetKeyState(Settings.PickUpKey.Value)) return false;
             if (!GameController.Window.IsForeground()) return false;
-            //if (GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible) return false;
+            if (GameController.Game.IngameState.IngameUi.InventoryPanel.IsVisible) return false;
 
             return true;
         }
@@ -87,8 +87,8 @@ namespace SimplePickIt
                         && label.ItemOnGround?.Type != null
                         && label.ItemOnGround.Type == EntityType.WorldItem
                         && label.IsVisible
-                        //&& label.CanPickUp
-                        //&& !IsUniqueItem(label)
+                        && (label.CanPickUp || label.MaxTimeForPickUp.TotalSeconds <= 0)
+                        && !IsUniqueItem(label)
                         )
                     .OrderBy(label => label.ItemOnGround.DistancePlayer)
                     .ToList();
