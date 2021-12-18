@@ -87,7 +87,7 @@ namespace SimplePickIt
                         && label.ItemOnGround?.Type != null
                         && label.ItemOnGround.Type == EntityType.WorldItem
                         && label.IsVisible
-                        && (label.CanPickUp) //|| label.MaxTimeForPickUp.TotalSeconds <= 0)
+                        && (label.CanPickUp || label.MaxTimeForPickUp.TotalSeconds <= 0)
                         && !IsUniqueItem(label)
                         )
                     .OrderBy(label => label.ItemOnGround.DistancePlayer)
